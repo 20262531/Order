@@ -145,3 +145,28 @@ OCR อ่านได้ดีที่สุดเมื่อ:
 - ถ้าอยู่ในโฟลเดอร์ย่อย: `https://ชื่อโดเมน/ชื่อโฟลเดอร์/room-order-gateway.html`
 
 หลังอัปเดตไฟล์บน GitHub Pages แล้ว แนะนำให้เปิดเว็บและกด `Ctrl + F5` 1 ครั้ง เพื่อให้ Service Worker โหลดไฟล์ใหม่
+
+
+## Scan & Dine resort design — November 2026
+
+Guest gateway redesigned in navy, warm cream and gold with responsive mobile layout.
+Changed files: room-order-gateway.html, gateway.css, sw.js.
+Upload these three files together to the existing GitHub Pages repository.
+Room mappings remain unchanged (529 rooms). Includes loading retry and accessible input feedback.
+Verified room routing with all 529 stored mappings and empty, unknown, ambiguous and normalized input.
+Desktop and 390px mobile layouts visually reviewed. External ordering sites were not tested.
+
+
+## Radisson guest gateway — November 2026
+Scan & Dine uses the supplied Radisson Resort Layan Phuket logo, white and turquoise design.
+Upload room-order-gateway.html, gateway.css, sw.js and assets/radisson-logo.png together.
+Desktop and 390px layouts reviewed. Room mapping and routing JavaScript unchanged from the verified 529-room version.
+
+
+## English / Russian gateway
+Switch language using English / Русский. The preference is remembered on the same browser when storage is available.
+All gateway copy, room hints and validation/loading messages are translated.
+Language switching preserves the entered room and current error. Room mappings unchanged.
+The external ordering site keeps its own language settings.
+Verified: desktop and 390px mobile, remembered Russian after reload, language switching with an error, and all 529 room routes in both languages.
+Update room-order-gateway.html, gateway.css and sw.js; keep assets/radisson-logo.png from the Radisson release.
