@@ -177,3 +177,7 @@ Removed marketing copy, decorative artwork, step indicator and repeated footer t
 Single compact form retains Radisson logo, English/Russian switch, room input, menu button and brief help.
 Ready messages are hidden; loading and validation remain visible when needed.
 Verified English/Russian room routing, all 529 mappings and 390px mobile layout.
+
+
+## Full-screen dining design — 12 November 2026
+Guest gateway now uses the supplied prawn photo as a full-screen background, white branding and turquoise action. English placeholder: Enter Your Room Number. Russian placeholder: Введите номер комнаты. Existing room destinations are unchanged.

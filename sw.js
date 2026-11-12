@@ -1,4 +1,4 @@
-const CACHE_NAME = 'laya-order-tracker-v14-radisson-simple';
+const CACHE_NAME = 'laya-order-tracker-v15-radisson-fullscreen';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const APP_SHELL = [
   './styles.css',
   './gateway.css',
   './assets/radisson-logo.png',
+  './assets/dining-background.jpg',
   './app.js',
   './firebase-config.js',
   './manifest.webmanifest',
