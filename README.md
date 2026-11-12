@@ -170,3 +170,10 @@ Language switching preserves the entered room and current error. Room mappings u
 The external ordering site keeps its own language settings.
 Verified: desktop and 390px mobile, remembered Russian after reload, language switching with an error, and all 529 room routes in both languages.
 Update room-order-gateway.html, gateway.css and sw.js; keep assets/radisson-logo.png from the Radisson release.
+
+
+## Simplified guest gateway
+Removed marketing copy, decorative artwork, step indicator and repeated footer text.
+Single compact form retains Radisson logo, English/Russian switch, room input, menu button and brief help.
+Ready messages are hidden; loading and validation remain visible when needed.
+Verified English/Russian room routing, all 529 mappings and 390px mobile layout.

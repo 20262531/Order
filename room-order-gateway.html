@@ -6,45 +6,28 @@
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <title>Scan &amp; Dine | Radisson Resort Layan Phuket</title>
 <meta content="#249db2" name="theme-color"/>
-<meta content="A little indulgence, delivered. Enter your room number to explore Radisson in-room dining." name="description"/>
+<meta content="Enter your room number to open the in-room dining menu at Radisson Resort Layan Phuket." name="description"/>
 <link href="gateway.css" rel="stylesheet"/>
 </head>
 <body>
 <main class="gateway">
-<section aria-labelledby="welcomeTitle" class="welcome">
-<a aria-label="Radisson Resort Layan Phuket — Scan and Dine home" class="brand" href="room-order-gateway.html"><img alt="Radisson Resort Layan Phuket" height="1177" src="assets/radisson-logo.png" width="1336"/></a>
-<div class="welcome-content">
-<p class="eyebrow" data-i18n="eyebrow"><span></span> A TASTE OF YOUR STAY</p>
-<h1 data-i18n="hero" id="welcomeTitle">Stay in.<br/> Dine <em>beautifully.</em></h1>
-<p class="intro" data-i18n="intro">Your favourite flavours.<br/>The comfort of your room.</p>
-<div aria-hidden="true" class="dining-art">
-<svg fill="none" viewbox="0 0 440 200" xmlns="http://www.w3.org/2000/svg">
-<ellipse cx="220" cy="170" opacity=".22" rx="179" ry="18" stroke="currentColor"></ellipse>
-<path d="M72 154h296M89 147c4-66 57-110 131-110s127 44 131 110H89Z" stroke="currentColor" stroke-width="1.6"></path>
-<path d="M204 35v-6c0-9 32-9 32 0v6M111 133c5-34 24-58 52-71M65 160h310" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"></path>
-<path d="M287 23c-12-13 14-17 3-31M260 17c-12-13 14-17 3-31" opacity=".5" stroke="currentColor" stroke-linecap="round" stroke-width="1.5" transform="translate(0 18)"></path>
-<path d="M394 166c-6-49 9-90 34-130M406 102c-28-5-38-25-38-25 26-3 36 12 38 25ZM417 75c-6-27 8-43 8-43 11 20 6 33-8 43ZM399 135c-23-4-32-22-32-22 22-2 31 10 32 22Z" opacity=".32" stroke="currentColor"></path>
-</svg>
-</div>
-</div>
-<div class="welcome-footer"><span data-i18n="dining">IN-ROOM DINING</span><span data-i18n="comfort">Made for moments of comfort</span></div>
-</section>
+
 <section aria-labelledby="gatewayTitle" class="entry-panel">
-<div class="entry-inner"><nav aria-label="Language / Язык" class="language-switch"><button aria-pressed="true" data-language="en" lang="en" type="button">English</button><button aria-pressed="false" data-language="ru" lang="ru" type="button">Русский</button></nav>
-<div class="service-tag" data-i18n="tag"><span aria-hidden="true" class="service-icon">✧</span> YOUR ROOM. YOUR TABLE.</div>
-<h2 data-i18n="title" id="gatewayTitle">Scan &amp; Dine</h2>
-<p class="entry-copy" data-i18n="copy">Something delicious awaits.<br/>Enter your room number to explore the menu.</p>
-<div aria-label="Step 1 of 3: Room, then menu, then order" class="steps"><span class="active" data-i18n="step1"><b>1</b> Your room</span><i></i><span data-i18n="step2"><b>2</b> The menu</span><i></i><span data-i18n="step3"><b>3</b> Enjoy</span></div>
+<div class="entry-inner"><nav aria-label="Language / Язык" class="language-switch"><button aria-pressed="true" data-language="en" lang="en" type="button">English</button><button aria-pressed="false" data-language="ru" lang="ru" type="button">Русский</button></nav><a aria-label="Radisson Resort Layan Phuket — Scan and Dine home" class="brand" href="room-order-gateway.html"><img alt="Radisson Resort Layan Phuket" height="1177" src="assets/radisson-logo.png" width="1336"/></a>
+
+<h1 data-i18n="title" id="gatewayTitle">Scan &amp; Dine</h1>
+
+
 <form id="roomGatewayForm" novalidate="">
-<label data-i18n="label" for="roomInput">Room number <span>เลขห้องพัก</span></label>
+<label data-i18n="label" for="roomInput">Room number</label>
 <div class="input-wrap"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" viewbox="0 0 24 24"><path d="M5 21h14M7 21V4l10-2v19M11 12h1"></path></svg><input aria-describedby="roomHint gatewayMessage" autocapitalize="characters" autocomplete="off" id="roomInput" inputmode="text" maxlength="12" name="room" placeholder="e.g. A101" spellcheck="false"/></div>
-<p class="room-hint" data-i18n="hint" id="roomHint">Include your building letter, for example <strong>A101</strong> or <strong>D101B</strong>.</p>
-<button class="order-button" disabled="" id="gatewaySubmitBtn" type="submit"><span data-i18n="button">Explore the menu</span><span aria-hidden="true">→</span></button>
+<p class="room-hint" data-i18n="hint" id="roomHint">e.g. A101, D101B</p>
+<button class="order-button" disabled="" id="gatewaySubmitBtn" type="submit"><span data-i18n="button">Open menu</span><span aria-hidden="true">→</span></button>
 <p aria-live="polite" class="gateway-message" id="gatewayMessage" role="status">Loading room list...</p>
-<button class="retry" data-i18n="retry" hidden="" id="retryLoad" type="button">Try again · ลองอีกครั้ง</button>
+<button class="retry" data-i18n="retry" hidden="" id="retryLoad" type="button">Try again</button>
 </form>
-<div class="help"><span aria-hidden="true" class="help-mark">?</span><p data-i18n="help">Need a little assistance?<br/><span>Please contact our Front Desk team.</span></p></div>
-<footer class="entry-footer" data-i18n="footer">RADISSON RESORT LAYAN PHUKET <span>•</span> A little indulgence, delivered.</footer>
+<div class="help"><p data-i18n="help">Need help? Please contact Front Desk.</p></div>
+
 </div>
 </section>
 </main>
@@ -72,12 +55,12 @@
     let language = "en";
     try { if (localStorage.getItem("radisson_dining_language") === "ru") language = "ru"; } catch (_) {}
     let messageState = {key: "loading", type: "", params: {}};
-    const UI = {"eyebrow": {"en": "<span></span> A TASTE OF YOUR STAY", "ru": "<span></span> ВКУС ВАШЕГО ОТДЫХА"}, "hero": {"en": "Stay in.<br /> Dine <em>beautifully.</em>", "ru": "Оставайтесь в номере.<br /> <em>Наслаждайтесь вкусом.</em>"}, "intro": {"en": "Your favourite flavours.<br />The comfort of your room.", "ru": "Любимые блюда.<br />В уюте вашего номера."}, "dining": {"en": "IN-ROOM DINING", "ru": "ДОСТАВКА ЕДЫ В НОМЕР"}, "comfort": {"en": "Made for moments of comfort", "ru": "Для приятных моментов отдыха"}, "tag": {"en": "<span class=\"service-icon\" aria-hidden=\"true\">✧</span> YOUR ROOM. YOUR TABLE.", "ru": "<span class=\"service-icon\" aria-hidden=\"true\">✧</span> ВАШ НОМЕР. ВАШ СТОЛ."}, "title": {"en": "Scan &amp; Dine", "ru": "Меню в вашем номере"}, "copy": {"en": "Something delicious awaits.<br />Enter your room number to explore the menu.", "ru": "Вас ждёт что-то вкусное.<br />Введите номер комнаты, чтобы открыть меню."}, "step1": {"en": "<b>1</b> Your room", "ru": "<b>1</b> Ваш номер"}, "step2": {"en": "<b>2</b> The menu", "ru": "<b>2</b> Меню"}, "step3": {"en": "<b>3</b> Enjoy", "ru": "<b>3</b> Приятного аппетита"}, "label": {"en": "Room number <span>เลขห้องพัก</span>", "ru": "Номер комнаты <span>Room number</span>"}, "hint": {"en": "Include your building letter, for example <strong>A101</strong> or <strong>D101B</strong>.", "ru": "Укажите букву корпуса, например <strong>A101</strong> или <strong>D101B</strong>."}, "button": {"en": "Explore the menu", "ru": "Открыть меню"}, "retry": {"en": "Try again · ลองอีกครั้ง", "ru": "Попробовать снова"}, "help": {"en": "Need a little assistance?<br /><span>Please contact our Front Desk team.</span>", "ru": "Нужна помощь?<br /><span>Пожалуйста, обратитесь на стойку регистрации.</span>"}, "footer": {"en": "RADISSON RESORT LAYAN PHUKET <span>•</span> A little indulgence, delivered.", "ru": "RADISSON RESORT LAYAN PHUKET <span>•</span> Немного удовольствия с доставкой."}};
+    const UI = {"title": {"en": "Scan &amp; Dine", "ru": "Заказ еды в номер"}, "label": {"en": "Room number", "ru": "Номер комнаты"}, "hint": {"en": "e.g. A101, D101B", "ru": "Например: A101, D101B"}, "button": {"en": "Open menu", "ru": "Открыть меню"}, "retry": {"en": "Try again", "ru": "Попробовать снова"}, "help": {"en": "Need help? Please contact Front Desk.", "ru": "Нужна помощь? Обратитесь на стойку регистрации."}};
     const MESSAGES = {
       loading: {en:"Loading room list...",ru:"Загружаем список номеров..."},
-      ready: {en:"Please enter your room number.",ru:"Пожалуйста, введите номер комнаты."},
+      ready: {en:"",ru:""},
       loadError: {en:"Unable to load rooms. Please try again or contact Front Desk.",ru:"Не удалось загрузить список номеров. Попробуйте снова или обратитесь на стойку регистрации."},
-      continue: {en:"Press Explore the menu to continue.",ru:"Нажмите «Открыть меню», чтобы продолжить."},
+      continue: {en:"",ru:""},
       empty: {en:"Please enter your room number.",ru:"Пожалуйста, введите номер комнаты."},
       notFound: {en:"Room not found. Please check your room number or contact Front Desk.",ru:"Номер не найден. Проверьте номер комнаты или обратитесь на стойку регистрации."},
       ambiguous: {en:"Please include building letter. Matching rooms: {rooms}",ru:"Укажите букву корпуса. Найдены номера: {rooms}"},
@@ -95,7 +78,6 @@
       document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = UI[el.dataset.i18n][language]; });
       document.querySelectorAll("[data-language]").forEach(el => { el.setAttribute("aria-pressed", String(el.dataset.language === language)); });
       els.input.placeholder = language === "ru" ? "Например, A101" : "e.g. A101";
-      document.querySelector(".steps").setAttribute("aria-label", language === "ru" ? "Шаг 1 из 3: номер комнаты, меню, приятного аппетита" : "Step 1 of 3: Room, then menu, then enjoy");
       document.title = (language === "ru" ? "Меню в вашем номере" : "Scan & Dine") + " | Radisson Resort Layan Phuket";
       document.querySelector(".brand").setAttribute("aria-label", language === "ru" ? "Radisson Resort Layan Phuket — Главная" : "Radisson Resort Layan Phuket — Scan and Dine home");
       setMessage(messageState.key, messageState.type, messageState.params);
@@ -137,7 +119,7 @@
     els.input.addEventListener("input", () => {
       const value = normalizeRoom(els.input.value);
       if (els.input.value !== value) els.input.value = value;
-      if (ready && value) setMessage("continue");
+      if (ready) setMessage("ready");
     });
 
     els.form.addEventListener("submit", (event) => {

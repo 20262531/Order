@@ -1,4 +1,4 @@
-const CACHE_NAME = 'laya-order-tracker-v13-radisson-en-ru';
+const CACHE_NAME = 'laya-order-tracker-v14-radisson-simple';
 const APP_SHELL = [
   './',
   './index.html',
