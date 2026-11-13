@@ -181,3 +181,6 @@ Verified English/Russian room routing, all 529 mappings and 390px mobile layout.
 
 ## Full-screen dining design — 12 November 2026
 Guest gateway now uses the supplied prawn photo as a full-screen background, white branding and turquoise action. English placeholder: Enter Your Room Number. Russian placeholder: Введите номер комнаты. Existing room destinations are unchanged.
+
+
+Numeric room entry: 1=A, 2=B, 3=C, 5=D. Examples: 1105=A105; 2215=B215; 5101B=D101B. Room destinations remain unchanged.

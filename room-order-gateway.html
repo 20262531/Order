@@ -87,6 +87,15 @@
     setLanguage(language);
 
     function findRoom(room) {
+      room = normalizeRoom(room);
+      // Numeric building prefixes: 1105 = A105, 2215 = B215.
+      // Preserve optional room suffixes, e.g. 5101B = D101B.
+      const numericRoom = /^([1235])(\d{3}[A-Z]?)$/.exec(room);
+      if (numericRoom) {
+        const buildings = { "1": "A", "2": "B", "3": "C", "5": "D" };
+        room = buildings[numericRoom[1]] + numericRoom[2];
+        return roomLinks[room] ? { room, url: roomLinks[room] } : null;
+      }
       if (roomLinks[room]) return { room, url: roomLinks[room] };
 
       // Guest enters only 101 / 101B: help if there is exactly one matching room.
