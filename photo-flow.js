@@ -31,10 +31,14 @@ setInterval(pumpQueue,15000);window.addEventListener('online',pumpQueue);
 if(mode==='hostess'){
  const outbox=await window.PhotoOutbox.open();
  const save=value=>outbox.saveDraft(value);
+ function uploadButton(){const b=$('upload');b.disabled=working;b.textContent=working?'กำลังเก็บรูปเข้าคิว…':pending?'ส่งเข้าครัว':'ถ่ายบิลถัดไป';b.setAttribute('aria-busy',String(working));}
+
  pending=await outbox.draft();
  if(pending){$('preview').src=URL.createObjectURL(pending.file);$('preview').hidden=false;$('upload').disabled=false;message('มีรูปที่เลือกไว้แล้ว ตรวจภาพแล้วกดส่งเข้าคิว');}
+ uploadButton();
  let uploading=false,sentCount=0;
- async function uploadList(){const jobs=await outbox.list();$('uploadQueue').dataset.pendingCount=jobs.length;$('uploadQueue').innerHTML=`<strong>คิวส่งรูปในเครื่อง ${jobs.length} บิล${sentCount?' • ส่งถึงระบบแล้ว '+sentCount+' บิล':''}</strong>`+jobs.sort((a,b)=>a.queuedAt-b.queuedAt).map((j,n)=>`<div class="upload-job"><span>บิล ${n+1} · ${esc(j.file.name||'รูปบิล')} — ${j.status==='error'?'ส่งไม่สำเร็จ: '+esc(j.error):j.status==='uploading'?'กำลังส่งรูป…':'รอส่งรูป'} </span>${j.status==='error'?`<button data-retry-upload="${esc(j.id)}">ลองส่งอีกครั้ง</button>`:''}</div>`).join('')+(!navigator.onLine&&jobs.length?'<p>ออฟไลน์ • รูปอยู่ในเครื่อง จะส่งต่อเมื่อเชื่อมอินเทอร์เน็ต</p>':'');return jobs;}
+ async function uploadList(){const jobs=await outbox.list();$('uploadQueue').dataset.pendingCount=jobs.length;$('uploadQueue').classList.toggle('live',jobs.length===0);
+ if(!pending&&!working)message(jobs.length?'พร้อมถ่ายบิลถัดไป • ระบบกำลังส่งรูปตามคิว ดูสถานะด้านล่าง':sentCount?'ส่งรูปถึงระบบแล้ว ✓ • พร้อมถ่ายบิลถัดไป':'พร้อมถ่ายบิลใหม่ • ไม่มีรูปค้างส่งในเครื่อง');$('uploadQueue').innerHTML=`<strong>คิวส่งรูปในเครื่อง ${jobs.length} บิล${sentCount?' • ส่งถึงระบบแล้ว '+sentCount+' บิล':''}</strong>`+jobs.sort((a,b)=>a.queuedAt-b.queuedAt).map((j,n)=>`<div class="upload-job"><span>บิล ${n+1} · ${esc(j.file.name||'รูปบิล')} — ${j.status==='error'?'ส่งไม่สำเร็จ: '+esc(j.error):j.status==='uploading'?'กำลังส่งรูป…':'รอส่งรูป'} </span>${j.status==='error'?`<button data-retry-upload="${esc(j.id)}">ลองส่งอีกครั้ง</button>`:''}</div>`).join('')+(!navigator.onLine&&jobs.length?'<p>ออฟไลน์ • รูปอยู่ในเครื่อง จะส่งต่อเมื่อเชื่อมอินเทอร์เน็ต</p>':'');return jobs;}
  async function publishPhoto(job){
  const id=job.id,ref=created(id);let skip=false,url='';
  await f.runTransaction(db,async tx=>{skip=false;url='';const s=await tx.get(ref);if(s.exists()){const o=s.data();skip=!!(o.completed||o.softDeleted||o.items?.length||o.imageUrl);url=o.imageUrl||'';if(!skip)tx.update(ref,{ocrStatus:'photo_uploading',notes:'กำลังรับรูปจาก Hostess',updatedAt:f.serverTimestamp()});}else tx.set(ref,{...blank(id),ocrStatus:'photo_uploading',notes:'Hostess ส่งบิลแล้ว • กำลังรับรูป'});});
@@ -55,10 +59,10 @@ if(mode==='hostess'){
  window.addEventListener('online',()=>{uploadList();pumpUploads();});window.addEventListener('offline',()=>uploadList());setInterval(()=>{uploadList();pumpUploads();},15000);
  window.addEventListener('beforeunload',e=>{if(uploading||Number($('uploadQueue').dataset.pendingCount)>0){e.preventDefault();e.returnValue='';}});
  await uploadList();pumpUploads();
- async function send(){if(working||!pending)return;working=true;$('camera').disabled=true;$('upload').disabled=true;
+ async function send(){if(working)return;if(!pending){$('camera').click();return;}working=true;$('camera').disabled=true;uploadButton();
  try{await outbox.enqueue(pending);pending=null;$('preview').hidden=true;$('preview').removeAttribute('src');$('retry').hidden=true;$('next').hidden=true;message('เก็บเข้าคิวในเครื่องแล้ว ✓ • พร้อมถ่ายบิลถัดไป • ดูสถานะส่งรูปด้านล่าง');}
  catch(e){message('เก็บเข้าคิวไม่ได้ รูปยังอยู่: '+e.message);}
- finally{working=false;$('camera').disabled=false;$('upload').disabled=!pending;$('upload').textContent='ส่งเข้าครัว';}
+ finally{working=false;$('camera').disabled=false;uploadButton();}
  // Network work starts only after the draft UI is released.
  uploadList().then(pumpUploads).catch(e=>message(e.message));
  }

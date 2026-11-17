@@ -6,3 +6,7 @@ body[data-mode="kitchen"]{background:#eef2f5}body[data-mode="kitchen"] main{max-
 .upload-job{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #dce6ec;font-size:13px;overflow-wrap:anywhere}
 .upload-job button{flex-shrink:0;min-height:40px}
 #uploadQueue:empty{display:none}
+
+/* Disabled does not always mean a network request is running. */
+body[data-mode="hostess"] button:disabled{cursor:default}
+body[data-mode="hostess"] #upload[aria-busy="true"]{cursor:progress}
