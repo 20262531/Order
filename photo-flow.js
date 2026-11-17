@@ -29,19 +29,39 @@ async function pumpQueue(){
 f.onSnapshot(f.query(f.collection(db,'orders'),f.where('completed','==',false)),{includeMetadataChanges:true},snap=>{queueConnected=!snap.metadata.fromCache;queueOrders=snap.docs.map(d=>({...d.data(),id:d.id}));queueLabel();pumpQueue();},()=>{queueConnected=false;if($('aiQueueStatus'))$('aiQueueStatus').textContent='คิว AI รอเชื่อมต่อ • รูปที่ส่งแล้วไม่หาย';});
 setInterval(pumpQueue,15000);window.addEventListener('online',pumpQueue);
 if(mode==='hostess'){
- const req=indexedDB.open('photo-kitchen-pending',1);req.onupgradeneeded=()=>req.result.createObjectStore('pending');localDB=await new Promise((r,j)=>{req.onsuccess=()=>r(req.result);req.onerror=()=>j(req.error);});
- function save(value){return new Promise((r,j)=>{const tx=localDB.transaction('pending','readwrite');if(value)tx.objectStore('pending').put(value,'current');else tx.objectStore('pending').delete('current');tx.oncomplete=r;tx.onerror=()=>j(tx.error);});}
- pending=await new Promise((r,j)=>{const q=localDB.transaction('pending').objectStore('pending').get('current');q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error);});
- if(pending){$('next').hidden=!pending.published;$('preview').src=URL.createObjectURL(pending.file);$('preview').hidden=false;$('retry').hidden=!pending.attempted;$('upload').disabled=false;message(pending.attempted?'มีรูปค้าง กดอัปโหลดหรือลองส่งรูปเดิมอีกครั้ง':'มีรูปที่เลือกไว้แล้ว ตรวจภาพแล้วกดอัปโหลดเพื่อส่งเข้าครัว');}
- async function send(){if(working||!pending)return;working=true;$('camera').disabled=true;$('upload').disabled=true;$('upload').textContent='กำลังส่งรูปเข้าครัว…';$('retry').hidden=true;$('next').hidden=true;try{pending.attempted=true;await save(pending);if(!navigator.onLine)throw Error('ออฟไลน์ เก็บรูปไว้แล้ว กดลองส่งอีกครั้งเมื่อออนไลน์');message('กำลังส่งรูปบิล…');const id=pending.id,ref=created(id),existing=await f.getDoc(ref);if(existing.exists()&&(existing.data().items?.length||existing.data().completed)){await save(null);pending=null;message('บิลรูปนี้อยู่ในระบบแล้ว ไม่ส่งซ้ำ');return;}
- let url=existing.exists()?existing.data().imageUrl:'';
- if(!url){const image=sapi.ref(store,`orders/${id}/receipt`);await sapi.uploadBytes(image,pending.file,{contentType:pending.file.type});url=await sapi.getDownloadURL(image);}
- await f.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())tx.set(ref,{...blank(id),imageUrl:url});else if(!snap.data().completed&&!snap.data().items?.length&&!PhotoJobs.isReading(snap.data()))tx.update(ref,{imageUrl:url,ocrStatus:'ai_queued',notes:'รูปพร้อมแล้ว • รอ AI อ่าน',updatedAt:f.serverTimestamp()});});
- pending.published=true;await save(pending);$('kitchenLink').hidden=false;
- await save(null);pending=null;$('preview').hidden=true;$('retry').hidden=true;$('next').hidden=true;
- message('ส่งรูปเข้าครัวแล้ว ✓ • AI จะอ่านต่อเบื้องหลัง • พร้อมถ่ายบิลถัดไป');
- pumpQueue();
- }catch(e){message(e.message);$('retry').hidden=false;if(pending?.published)$('next').hidden=false;}finally{working=false;$('camera').disabled=false;$('upload').disabled=!pending;$('upload').textContent='อัปโหลดและส่งเข้าครัว';}}
+ const outbox=await window.PhotoOutbox.open();
+ const save=value=>outbox.saveDraft(value);
+ pending=await outbox.draft();
+ if(pending){$('preview').src=URL.createObjectURL(pending.file);$('preview').hidden=false;$('upload').disabled=false;message('มีรูปที่เลือกไว้แล้ว ตรวจภาพแล้วกดส่งเข้าคิว');}
+ let uploading=false,sentCount=0;
+ async function uploadList(){const jobs=await outbox.list();$('uploadQueue').dataset.pendingCount=jobs.length;$('uploadQueue').innerHTML=`<strong>คิวส่งรูปในเครื่อง ${jobs.length} บิล${sentCount?' • ส่งถึงระบบแล้ว '+sentCount+' บิล':''}</strong>`+jobs.sort((a,b)=>a.queuedAt-b.queuedAt).map((j,n)=>`<div class="upload-job"><span>บิล ${n+1} · ${esc(j.file.name||'รูปบิล')} — ${j.status==='error'?'ส่งไม่สำเร็จ: '+esc(j.error):j.status==='uploading'?'กำลังส่งรูป…':'รอส่งรูป'} </span>${j.status==='error'?`<button data-retry-upload="${esc(j.id)}">ลองส่งอีกครั้ง</button>`:''}</div>`).join('')+(!navigator.onLine&&jobs.length?'<p>ออฟไลน์ • รูปอยู่ในเครื่อง จะส่งต่อเมื่อเชื่อมอินเทอร์เน็ต</p>':'');return jobs;}
+ async function publishPhoto(job){
+ const id=job.id,ref=created(id);let skip=false,url='';
+ await f.runTransaction(db,async tx=>{skip=false;url='';const s=await tx.get(ref);if(s.exists()){const o=s.data();skip=!!(o.completed||o.softDeleted||o.items?.length||o.imageUrl);url=o.imageUrl||'';if(!skip)tx.update(ref,{ocrStatus:'photo_uploading',notes:'กำลังรับรูปจาก Hostess',updatedAt:f.serverTimestamp()});}else tx.set(ref,{...blank(id),ocrStatus:'photo_uploading',notes:'Hostess ส่งบิลแล้ว • กำลังรับรูป'});});
+ if(skip)return;
+ const image=sapi.ref(store,`orders/${id}/receipt`);await sapi.uploadBytes(image,job.file,{contentType:job.file.type});url=await sapi.getDownloadURL(image);
+ await f.runTransaction(db,async tx=>{const s=await tx.get(ref);if(!s.exists())return;const o=s.data();if(!o.completed&&!o.softDeleted&&!o.items?.length&&!PhotoJobs.isReading(o))tx.update(ref,{imageUrl:url,ocrStatus:'ai_queued',notes:'รูปพร้อมแล้ว • รอ AI อ่าน',updatedAt:f.serverTimestamp()});});
+ }
+ async function pumpUploads(){
+ if(uploading||!navigator.onLine)return;uploading=true;
+ try{const jobs=await uploadList();const candidate=jobs.filter(j=>j.status==='waiting'||(j.status==='uploading'&&j.leaseUntil<=Date.now())).sort((a,b)=>a.queuedAt-b.queuedAt)[0];if(!candidate)return;
+ const owner=crypto.randomUUID(),job=await outbox.claim(candidate.id,owner);if(!job)return;await uploadList();
+ try{await publishPhoto(job);await outbox.finish(job.id,owner);sentCount++;$('kitchenLink').hidden=false;pumpQueue();}
+ catch(e){await outbox.finish(job.id,owner,e.message||'ส่งรูปไม่สำเร็จ');await f.runTransaction(db,async tx=>{const ref=created(job.id),s=await tx.get(ref);if(s.exists()&&!s.data().completed&&!s.data().imageUrl&&!s.data().items?.length)tx.update(ref,{ocrStatus:'photo_upload_error',notes:'ส่งรูปยังไม่สำเร็จ • ให้ Hostess กดลองส่งอีกครั้งจากคิวในเครื่อง',updatedAt:f.serverTimestamp()});}).catch(()=>{});}
+ }catch(e){$('uploadQueue').textContent='ตรวจคิวส่งรูปไม่ได้: '+e.message;}
+ finally{uploading=false;await uploadList().catch(()=>{});const jobs=await outbox.list().catch(()=>[]);if(navigator.onLine&&jobs.some(j=>j.status==='waiting'))setTimeout(pumpUploads,200);}
+ }
+ $('uploadQueue').onclick=async e=>{const id=e.target.closest('button')?.dataset.retryUpload;if(id){await outbox.retry(id);await uploadList();pumpUploads();}};
+ window.addEventListener('online',()=>{uploadList();pumpUploads();});window.addEventListener('offline',()=>uploadList());setInterval(()=>{uploadList();pumpUploads();},15000);
+ window.addEventListener('beforeunload',e=>{if(uploading||Number($('uploadQueue').dataset.pendingCount)>0){e.preventDefault();e.returnValue='';}});
+ await uploadList();pumpUploads();
+ async function send(){if(working||!pending)return;working=true;$('camera').disabled=true;$('upload').disabled=true;
+ try{await outbox.enqueue(pending);pending=null;$('preview').hidden=true;$('preview').removeAttribute('src');$('retry').hidden=true;$('next').hidden=true;message('เก็บเข้าคิวในเครื่องแล้ว ✓ • พร้อมถ่ายบิลถัดไป • ดูสถานะส่งรูปด้านล่าง');}
+ catch(e){message('เก็บเข้าคิวไม่ได้ รูปยังอยู่: '+e.message);}
+ finally{working=false;$('camera').disabled=false;$('upload').disabled=!pending;$('upload').textContent='ส่งเข้าครัว';}
+ // Network work starts only after the draft UI is released.
+ uploadList().then(pumpUploads).catch(e=>message(e.message));
+ }
  $('camera').onchange=async()=>{const file=$('camera').files[0];if(!file)return;if(working||pending?.attempted||pending?.published){message('มีรูปค้างอยู่ กรุณาลองส่งรูปเดิมให้เสร็จก่อน');$('camera').value='';return;}if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>=8*1024*1024){message('เลือกรูป JPG / PNG / WebP ต่ำกว่า 8 MB');return;}try{$('camera').disabled=true;$('upload').disabled=true;const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');pending={id:'photo-'+hash,file};await save(pending);$('preview').src=URL.createObjectURL(file);$('preview').hidden=false;$('camera').value='';$('upload').disabled=false;$('retry').hidden=true;$('next').hidden=true;message('เลือกรูปแล้ว • ตรวจภาพ แล้วกดอัปโหลดและส่งเข้าครัว');}catch(e){message('บันทึกรูปในเครื่องไม่ได้: '+e.message);$('upload').disabled=true;}finally{$('camera').disabled=false;}};$('upload').onclick=send;$('retry').onclick=send;$('next').onclick=async()=>{if(working||!pending?.published)return;await save(null);pending=null;$('upload').disabled=true;$('retry').hidden=true;$('next').hidden=true;message('รูปบิลก่อนหน้ายังอยู่ในครัว เปิดรูปและกดอ่านใหม่จากหน้าครัวได้ • พร้อมถ่ายบิลถัดไป');};
 }else{
  const audio=new Audio('assets/alerts/chef-alert.mp3');$('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'เสียงเปิด':'เปิดเสียง';if(sound)audio.play().catch(()=>message('กรุณาเปิดเสียงอุปกรณ์'));};
@@ -62,7 +82,7 @@ if(mode==='hostess'){
  <div class="compact-menu">${!rows.length&&o.imageUrl?`<button class="pending-preview" data-image="${o.id}" aria-label="ขยายรูปบิล"><img src="${esc(o.imageUrl)}" alt="รูปบิลที่ส่งถึงครัวแล้ว" loading="lazy"><span>แตะเพื่อขยายรูปบิล</span></button>`:''}${rows.length?rows.map(i=>{
  const parts=String(i.text||'').split('\n'),main=parts.shift();
  return `<button class="dish ${i.done?'done':''}" data-order="${o.id}" data-item="${esc(i.id)}" ${locked.has(o.id)?'disabled':''} aria-pressed="${!!i.done}"><span class="dish-check" aria-hidden="true">${i.done?'✓':''}</span><span class="dish-content"><span class="dish-title">${esc(main)}</span>${parts.length?`<small>${esc(parts.join(' · '))}</small>`:''}</span></button>`;
- }).join(''):`<div class="ocr-error">${unsafe?'รายการเดิมอ่านคลาดเคลื่อน • กดอ่านใหม่ด้วย AI':o.ocrStatus==='error'?'การอ่านครั้งก่อนยังไม่สำเร็จ • ดูรูปหรืออ่านใหม่':aiReading?'AI กำลังอ่านเบื้องหลัง…':aiQueued?'รูปส่งถึงครัวแล้ว • รอ AI อ่าน':locked.has(o.id)?'กำลังอ่านรูป…':'รอผลอ่านรูป • หากปิดหน้าส่งบิลก่อนเสร็จ กดอ่านใหม่ได้'}<button data-read="${o.id}" ${locked.has(o.id)||aiReading||aiQueued?'disabled':''}>อ่านรูปนี้ใหม่</button></div>`}</div>
+ }).join(''):`<div class="ocr-error">${unsafe?'รายการเดิมอ่านคลาดเคลื่อน • กดอ่านใหม่ด้วย AI':o.ocrStatus==='photo_upload_error'?'ยังรับรูปไม่สำเร็จ • ให้ Hostess ลองส่งอีกครั้ง':o.ocrStatus==='photo_uploading'?'กำลังรับรูปจาก Hostess…':o.ocrStatus==='error'?'การอ่านครั้งก่อนยังไม่สำเร็จ • ดูรูปหรืออ่านใหม่':aiReading?'AI กำลังอ่านเบื้องหลัง…':aiQueued?'รูปส่งถึงครัวแล้ว • รอ AI อ่าน':locked.has(o.id)?'กำลังอ่านรูป…':'รอผลอ่านรูป • หากปิดหน้าส่งบิลก่อนเสร็จ กดอ่านใหม่ได้'}<button data-read="${o.id}" ${!o.imageUrl||locked.has(o.id)||aiReading||aiQueued?'disabled':''}>อ่านรูปนี้ใหม่</button></div>`}</div>
  <details class="compact-notes" ${important||metadataMissing||o.ocrStatus==='error'?'open':''}><summary>${important?'⚠ ข้อมูลแพ้อาหาร / หมายเหตุ':metadataMissing?'⚠ ตรวจโต๊ะ / เลขบิลจากรูป':o.ocrStatus==='error'?'สาเหตุที่อ่านไม่สำเร็จ':'ข้อมูลการอ่านบิล'}</summary><div>${esc(note)}</div></details>
  <div class="ticket-bottom"><button data-close="${o.id}" ${locked.has(o.id)?'disabled':''} class="primary full-button">${locked.has(o.id)?'กำลังบันทึก…':all?'✓ ปิดบิลนี้':'ปิดบิลนี้'}</button></div></article>`;
  }).join('')||'<div class="empty">ยังไม่มีบิลในรายการนี้</div>';
