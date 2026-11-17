@@ -21,6 +21,23 @@ export function validateReceipt(r){
  if(!r.readable||!r.table||!r.bill||!r.items.length||r.items.some(i=>i.quantity===null))throw Error('AI อ่านบิลนี้ไม่ครบ กรุณาดูรูปต้นฉบับหรือถ่ายใหม่ให้ชัด');
  return {...r,table:r.table.toUpperCase()==='TI'?'T1':r.table.toUpperCase()};
 }
+// Fetch only this project's receipt objects; never proxy arbitrary URLs or redirects.
+export function validateImageURL(value){
+ const u=new URL(value);if(u.protocol!=='https:'||u.hostname!=='firebasestorage.googleapis.com'||u.port||u.username||u.password||u.hash)throw Error('ใช้รูปจาก Firebase ของระบบนี้เท่านั้น');
+ const match=u.pathname.match(/^\/v0\/b\/([^/]+)\/o\/([^/]+)$/);if(!match||!['laya-order.firebasestorage.app','laya-order.appspot.com'].includes(decodeURIComponent(match[1])))throw Error('รูปอยู่คนละ Firebase bucket');
+ const object=decodeURIComponent(match[2]);if(!object.startsWith('orders/')||object.includes('..')||object.length>600)throw Error('รองรับเฉพาะรูปบิลใน orders');
+ if(u.searchParams.get('alt')!=='media')throw Error('URL รูปต้องเป็น media');
+ return u.toString();
+}
+async function imageFromURL(value){
+ const url=validateImageURL(value);let response;try{response=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(20000)});}catch{throw Error('Worker ดึงรูปจาก Firebase ไม่สำเร็จ กรุณาตรวจ Storage / อินเทอร์เน็ต');}
+ if(!response.ok)throw Error('ดึงรูปจาก Firebase ไม่สำเร็จ ('+response.status+') กรุณาตรวจว่ารูปยังอยู่และลิงก์ยังใช้ได้');
+ const mime=(response.headers.get('content-type')||'').split(';')[0];if(!['image/jpeg','image/png','image/webp'].includes(mime))throw Error('ไฟล์ใน Firebase ไม่ใช่ภาพ JPG/PNG/WebP');
+ const reader=response.body.getReader();let size=0,chunks=[];while(true){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>8*1024*1024){await reader.cancel();throw Error('รูปใหญ่เกิน 8 MB กรุณาถ่ายใหม่');}chunks.push(part.value);}
+ const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
+ let binary='';for(let i=0;i<bytes.length;i+=16384)binary+=String.fromCharCode(...bytes.subarray(i,i+16384));
+ return 'data:'+mime+';base64,'+btoa(binary);
+}
 async function upstream(image,key){
  const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,store:false,max_output_tokens:1600,input:[{role:'user',content:[{type:'input_text',text:instruction},{type:'input_image',image_url:image,detail:'high'}]}],text:{format:{type:'json_schema',name:'kitchen_ticket',strict:true,schema}}}),signal:AbortSignal.timeout(60000)});
  if(!response.ok){const status=response.status;throw Error(status===401?'OpenAI API Key ไม่ถูกต้อง':status===403?'API Key ต้องมีสิทธิ์ Responses Write และเข้าถึงโมเดล':status===429?'เครดิต/วงเงิน/อัตราเรียก OpenAI ถึงขีดจำกัด':status===404?'โมเดลนี้ยังใช้กับบัญชีไม่ได้ กรุณาตรวจชื่อโมเดล':'OpenAI ไม่สำเร็จ ('+status+') ไม่มีการลองซ้ำอัตโนมัติ');}
@@ -37,7 +54,7 @@ export default {
  const allowed=env.ALLOWED_ORIGIN||'https://20262531.github.io',origin=request.headers.get('Origin');
  const cors={'Access-Control-Allow-Origin':allowed,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Vary':'Origin'};
  const url=new URL(request.url);
- if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/health'))return json({service:'Kitchen Bill Reader',ready:!!env.OPENAI_API_KEY,model:MODEL});
+ if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/health'))return json({service:'Kitchen Bill Reader',ready:!!env.OPENAI_API_KEY,model:MODEL,version:'firebase-fetch-fix-1'});
  if(origin!==allowed)return json({error:'Origin ไม่ได้รับอนุญาต'},403);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
  if(request.method!=='POST'||url.pathname!=='/read')return json({error:'ใช้ POST /read'},405,cors);
@@ -47,7 +64,7 @@ export default {
  const reader=request.body?.getReader();if(!reader)throw Error('ไม่มีรูป');let size=0,chunks=[];
  while(true){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>2000000){await reader.cancel();return json({error:'รูปใหญ่เกินไป กรุณาลดขนาด'},413,cors);}chunks.push(part.value);}
  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
- const body=JSON.parse(new TextDecoder().decode(bytes)),image=body.image;
+ const body=JSON.parse(new TextDecoder().decode(bytes));if(body.image&&body.imageUrl)throw Error('ส่งรูปได้ครั้งละหนึ่งรูป');const image=body.imageUrl?await imageFromURL(body.imageUrl):body.image;
  if(typeof image!=='string'||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image))throw Error('ต้องส่งภาพ JPEG/PNG/WebP เท่านั้น');
  const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(image)))].map(b=>b.toString(16).padStart(2,'0')).join('');
  const cacheKey=new Request(url.origin+'/internal-receipt-cache/v1/'+hash);

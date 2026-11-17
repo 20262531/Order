@@ -37,3 +37,16 @@ cache ผลอ่านสำเร็จประมาณ 24 ชั่วโ�
 ยังไม่ได้ deploy หรือทดสอบกับคีย์จริง ต้องตรวจบิลตัวอย่างกับผล AI ก่อนนำไปทำอาหารจริง
 รูปบิลส่งผ่าน Cloudflare ไป OpenAI โดย store:false; ผลอ่าน cache อยู่ใน Cloudflare และข้อมูลบิลเก็บ Firebase เดิม ภาพต้นฉบับยังใช้เปิดตรวจได้
 Scan and Dine และ Firebase rules ไม่เปลี่ยน
+
+## แก้ Failed to fetch ที่ปุ่มอ่านใหม่
+
+ต้องอัปเดตทั้ง Worker และเว็บใน ZIP ชุดเดียวกัน:
+- Cloudflare: วาง cloudflare/worker.js ใหม่แล้ว Deploy; /health จะมี version:firebase-fetch-fix-1
+- GitHub Pages: อัปเดตไฟล์ใน Order-main รวม ai-client.js, photo-flow.js และ HTML ที่อ้างเวอร์ชันใหม่ จากนั้น Ctrl+Shift+R
+
+อ่านใหม่จะส่ง imageUrl ให้ Worker ดึงรูปเอง จึงไม่ต้องให้ browser fetch Firebase รูปเดิมข้าม origin โดยตรง Worker อนุญาตเฉพาะ https://firebasestorage.googleapis.com ใน bucket laya-order.firebasestorage.app หรือ laya-order.appspot.com และ path orders/ เท่านั้น ห้ามตาม redirect
+URL download อาจมี token สำหรับรูป ส่งผ่าน HTTPS ไป Worker ไม่บันทึก URL นี้ใน log ที่โค้ดสร้าง
+หากรูปหาย สิทธิ์ถูกปิด token ใช้ไม่ได้ หรือ Worker ดึงรูปไม่ได้ จะแสดง Firebase + HTTP status (ถ้ามี) ก่อนเรียก AI
+รูปที่อ่านใหม่ใช้ไฟล์เดิมจาก Firebase สูงสุด 8MB ไม่มีการ resize ฝั่ง Worker จึงอาจใช้ image tokens มากกว่าการอัปโหลดใหม่ที่ browser ย่อเป็นด้านยาว 1400px ราคาต่อบิลยังไม่ใช่ค่าคงที่
+ไม่มีการเปลี่ยน CORS bucket/rules production จากไฟล์นี้ ผลจริงยังต้องทดสอบกับ URL บิลจริงโดยเจ้าของ
+firebase-fetch.test.mjs ผ่านด้วย mock: CORS-free server fetch, whitelist, no redirects, failure before AI, cache; ไม่ใช้เครดิตจริง
