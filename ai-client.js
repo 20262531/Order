@@ -22,7 +22,7 @@ async function requestImage(payload){if(!endpoint)await setup();
  let response;try{response=await fetch(endpoint+'/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(75000)});}catch(e){throw Error('ติดต่อ AI ไม่ได้ กรุณาตรวจ Worker URL / การเปิด workers.dev / อินเทอร์เน็ต (ไม่มีการลองซ้ำอัตโนมัติ)');}
  const result=await response.json().catch(()=>({error:'Worker ไม่ได้ส่งผล JSON กรุณาติดตั้งโค้ดอ่านบิลก่อน'}));
  if(!response.ok){throw Error(result.error||'AI อ่านบิลไม่สำเร็จ');}
- const r=result.receipt;if(!r||!r.readable||!r.table||!r.bill||!Array.isArray(r.items)||!r.items.length||r.items.some(i=>!Number.isInteger(i.quantity)||i.quantity<1||typeof i.name!=='string'))throw Error('ข้อมูล AI ไม่ครบ กรุณาดูรูปบิล');
+ const r=result.receipt;if(!r||!r.readable||!Array.isArray(r.items)||!r.items.length||r.items.some(i=>!Number.isInteger(i.quantity)||i.quantity<1||typeof i.name!=='string'))throw Error('ข้อมูล AI ไม่ครบ กรุณาดูรูปบิล');
  const p={table:ReceiptParser.normalizeTable(r.table),bill:r.bill,items:r.items.map(i=>({...i,rawName:i.name})),warnings:[...(r.warnings||[]),'AI อ่านจากภาพ • ตรวจรูปต้นฉบับ โดยเฉพาะข้อมูลแพ้อาหาร'],rawText:r.items.map(i=>i.quantity+' '+i.name+' '+(i.modifiers||[]).join(' / ')).join('\n')};
  // Cost is an estimate from returned token usage, excludes tax/FX/infra. The provider Usage page is authoritative.
  if(result.usage){try{const costs=JSON.parse(localStorage.getItem('kitchen-ai-costs')||'[]');costs.push({at:Date.now(),...result.usage,estimatedUsd:result.cached?0:result.usage.estimatedUsd,cached:!!result.cached});localStorage.setItem('kitchen-ai-costs',JSON.stringify(costs.slice(-500)));}catch{}}
