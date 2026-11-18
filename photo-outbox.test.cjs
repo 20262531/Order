@@ -11,6 +11,11 @@ const db={objectStoreNames:{contains:n=>stores.has(n)},createObjectStore:n=>stor
 const window={};vm.runInNewContext(fs.readFileSync(__dirname+'/photo-outbox.js','utf8'),{window,indexedDB:{open(){const q={};setImmediate(()=>{q.result=db;if(!stores.size)q.onupgradeneeded();q.onsuccess();});return q;}},Date,Promise,Error});
 (async()=>{
  const q=await window.PhotoOutbox.open(),file=new Blob(['bill'],{type:'image/jpeg'}),job={id:'photo-1',file};
+ await q.saveDraft(job);
+ await q.discardDraft('different-draft');
+ assert.equal((await q.draft()).id,job.id);
+ await q.discardDraft(job.id);
+ assert.equal(await q.draft(),undefined);
  await q.saveDraft(job);assert.ok(await q.draft());quota=true;await assert.rejects(q.enqueue(job));quota=false;assert.ok(await q.draft());assert.equal((await q.list()).length,0);
  await q.enqueue(job);assert.equal(await q.draft(),undefined);assert.equal((await q.list()).length,1);
  await q.enqueue(job);assert.equal((await q.list()).length,1);

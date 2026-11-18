@@ -32,13 +32,42 @@ setInterval(pumpQueue,15000);window.addEventListener('online',()=>{connectionSta
 if(mode==='hostess'){
  const outbox=await window.PhotoOutbox.open();
  const save=value=>outbox.saveDraft(value);
- function uploadButton(){const b=$('upload');b.hidden=!pending;b.disabled=working;b.textContent=working?'กำลังเข้าคิว…':'ส่งเข้าครัว';b.setAttribute('aria-busy',String(working));}
+ function uploadButton(){
+  $('fileName').textContent=pending?.file?.name || 'รูปบิล';
+  $('removeDraft').disabled=working || !pending || !!pending.attempted || !!pending.published;
+  $('nextPhoto').disabled=working || !!pending;
+  const b=$('upload');b.hidden=!pending;b.disabled=working;b.textContent=working?'กำลังเข้าคิว…':'ส่งเข้าครัว';b.setAttribute('aria-busy',String(working));}
 
  pending=await outbox.draft();
  if(pending){$('preview').src=URL.createObjectURL(pending.file);$('preview').hidden=false;$('upload').disabled=false;message('มีรูปที่เลือกไว้แล้ว ตรวจภาพแล้วกดส่งเข้าคิว');}
  uploadButton();
+ $('nextPhoto').onclick=()=>$('camera').click();
+ $('removeDraft').onclick=async()=>{
+  if(working || $('camera').disabled || !pending || pending.attempted || pending.published)return;
+  working=true;
+  $('camera').disabled=true;
+  uploadButton();
+  try{
+   await outbox.discardDraft(pending.id);
+   pending=null;
+   if($('preview').src)URL.revokeObjectURL($('preview').src);
+   $('preview').hidden=true;
+   $('preview').removeAttribute('src');
+   message('');
+  }catch(e){message('ลบรูปไม่ได้: '+e.message);}
+  finally{working=false;$('camera').disabled=false;uploadButton();}
+ };
+ $('inspectDraft').onclick=()=>{
+  if(!pending)return;
+  $('draftImage').src=$('preview').src;
+  $('draftPicture').showModal();
+ };
  let uploading=false;
- async function uploadList(){const jobs=await outbox.list();$('uploadQueue').dataset.pendingCount=jobs.length;$('uploadQueue').classList.toggle('live',jobs.length===0);
+ async function uploadList(){const jobs=await outbox.list();
+  $('waitingCount').textContent=jobs.filter(job=>job.status==='waiting').length;
+  $('sendingCount').textContent=jobs.filter(job=>job.status==='uploading').length;
+  $('failedCount').textContent=jobs.filter(job=>job.status==='error').length;
+  $('uploadQueue').dataset.pendingCount=jobs.length;$('uploadQueue').classList.toggle('live',jobs.length===0);
  $('uploadQueue').innerHTML=(jobs.length?`<strong>คิวส่งรูป · ${jobs.length} บิล</strong>`:'')+jobs.sort((a,b)=>a.queuedAt-b.queuedAt).map((j,n)=>`<div class="upload-job"><span>บิล ${n+1} · ${esc(j.file.name||'รูปบิล')} — ${j.status==='error'?'ส่งไม่สำเร็จ: '+esc(j.error):j.status==='uploading'?'กำลังส่งรูป…':'รอส่งรูป'} </span>${j.status==='error'?`<button data-retry-upload="${esc(j.id)}">ลองส่งอีกครั้ง</button>`:''}</div>`).join('')+(!navigator.onLine&&jobs.length?'<p>ออฟไลน์ • รูปอยู่ในเครื่อง จะส่งต่อเมื่อเชื่อมอินเทอร์เน็ต</p>':'');return jobs;}
  async function publishPhoto(job){
  const id=job.id,ref=created(id);let skip=false,url='';
@@ -68,6 +97,7 @@ if(mode==='hostess'){
  uploadList().then(pumpUploads).catch(e=>message(e.message));
  }
  $('camera').onchange=async()=>{const file=$('camera').files[0];if(!file)return;if(working||pending?.attempted||pending?.published){message('มีรูปค้างอยู่ กรุณาลองส่งรูปเดิมให้เสร็จก่อน');$('camera').value='';return;}if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>=8*1024*1024){message('เลือกรูป JPG / PNG / WebP ต่ำกว่า 8 MB');return;}try{$('camera').disabled=true;$('upload').disabled=true;const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');pending={id:'photo-'+hash,file};await save(pending);$('preview').src=URL.createObjectURL(file);$('preview').hidden=false;$('camera').value='';$('upload').disabled=false;$('retry').hidden=true;$('next').hidden=true;uploadButton();message('');}catch(e){message('บันทึกรูปในเครื่องไม่ได้: '+e.message);$('upload').disabled=true;}finally{$('camera').disabled=false;}};$('upload').onclick=send;$('retry').onclick=send;$('next').onclick=async()=>{if(working||!pending?.published)return;await save(null);pending=null;$('upload').disabled=true;$('retry').hidden=true;$('next').hidden=true;message('รูปบิลก่อนหน้ายังอยู่ในครัว เปิดรูปและกดอ่านใหม่จากหน้าครัวได้ • พร้อมถ่ายบิลถัดไป');};
+ $('camera').disabled=false;
 }else{
  const paths = {
  chef:'<path d="M6 15a4.5 4.5 0 0 1-1-8.9A5.5 5.5 0 0 1 15 5a4.8 4.8 0 1 1 3 9.2V20H6zM6 17h12M9 12v3m3-4v4m3-3v3"/>',
@@ -129,12 +159,19 @@ document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.datase
   const overdue=late(o,now), label=stage(o), notes=String(o.notes||'');
   const warnings=[...new Set([...(o.items||[]).map(i=>i.text),...notes.split('\n')].filter(s=>s&&/แพ้|allerg|anaphyl/i.test(s)&&s!=='AI อ่านจากภาพ • ตรวจรูปต้นฉบับ โดยเฉพาะข้อมูลแพ้อาหาร'))];
   const saving=[...dishEdits.values()].some(e=>e.order===o.id);
-  return `<article class="ticket ${items.length?'':'wait'} ${overdue?'late':''}"><div class="ticket-head"><div><h2 class="table-title">โต๊ะ <strong>${esc(ReceiptParser.normalizeTable(o.tableNo)||'—')}</strong></h2><div class="identifier">${icon('receipt')}${esc(o.billNo||'รอเลขบิล')}</div></div><div class="when"><span class="elapsed">${overdue?'<span class="late-lamp" aria-hidden="true"></span>เกิน 30 นาที · ':icon('clock')}${age} นาที</span><small>เริ่ม ${dt?time(dt):'—'} น.</small></div></div>
-  <div class="summary"><div class="line"><span class="leftcount">${items.length?(left?`ค้าง <b>${left}</b> เมนู`:'✓ ครบทุกเมนู'):'รอรายการอาหาร'}</span><span class="status">${icon(items.length?'dish':'scan')}${saving?'กำลังบันทึก…':o.completed?'ปิดแล้ว':label}</span></div><div class="bar">${items.map((_,i)=>`<span class="${i<items.length-left?'filled':''}"></span>`).join('')}</div></div>
+  const ready=items.length>0 && left===0;
+  const status=saving?'กำลังบันทึก…':o.completed?'ปิดแล้ว':ready?'เสร็จแล้ว (ครบถ้วน)':items.length?'กำลังทำ':label;
+  const storagePrefix='https://firebasestorage.googleapis.com/v0/b/'+window.LAYA_FIREBASE_CONFIG.storageBucket+'/o/';
+  const thumbnail=typeof o.imageUrl==='string' && o.imageUrl.startsWith(storagePrefix);
+  return `<article class="ticket ${overdue?'late':''} ${ready?'ready':''}">
+    <div class="ticket-head"><div><h2 class="table-title">โต๊ะ <strong>${esc(ReceiptParser.normalizeTable(o.tableNo)||'—')}</strong></h2>
+      <div class="identifier">${icon('receipt')} ${esc(o.billNo||'รอเลขบิล')}</div><div class="received">${icon('clock')} รับบิล ${dt?time(dt):'—'}</div></div>
+      <button class="thumb" data-image="${id}" aria-label="ดูรูปบิล ${esc(o.billNo||o.tableNo||'')}" ${o.imageUrl?'':'disabled'}>${thumbnail?`<img src="${esc(o.imageUrl)}" loading="lazy" alt="ดูรูปบิล">`:icon('image')}</button></div>
+    <div class="line"><span class="status">${icon(ready?'checkcircle':items.length?'chef':'scan')} ${status}</span>${left?`<span class="leftcount">ค้าง ${left} เมนู</span>`:''}</div>
   ${items.length?`<div class="dishes">${items.map(i=>dish(o,i)).join('')}</div>`:`<div class="pending">${icon(o.imageUrl?'scan':'upload')}<strong>${label}</strong><small>${o.imageUrl?'เปิดรูปบิลเพื่อตรวจรายการได้':'รอรูปจากพนักงานส่งบิล'}</small></div>`}
   ${warnings.length?`<div class="allergy">${icon('warn')}<span>ข้อมูลแพ้อาหาร · ${esc(warnings.join('\n'))}</span></div>`:''}
   <details class="info" ${o.ocrStatus==='error'?'open':''}><summary>${o.ocrStatus==='done'&&(!o.tableNo||!o.billNo)?'⚠ ตรวจโต๊ะ / เลขบิลจากรูป':'หมายเหตุ / ข้อมูลการอ่านบิล'}</summary><p>${esc(notes)}</p>${o.imageUrl&&!o.completed?`<button data-read="${id}" ${locked.has(o.id)||PhotoJobs.isReading(o)||o.ocrStatus==='ai_queued'?'disabled':''}>อ่านรูปใหม่</button>`:''}</details>
-  <div class="actions"><button class="btn" data-image="${id}" ${o.imageUrl?'':'disabled'}>${icon('image')}ดูรูปบิล</button>${o.completed?'<span class="archived">✓ ปิดแล้ว</span>':`<button class="btn primary" data-close="${id}" ${locked.has(o.id)?'disabled':''}>${icon('checkcircle')}ปิดบิล</button>`}</div></article>`;
+  <div class="actions"><span class="elapsed"><small>${overdue?'เกิน 30 นาที':'ระยะเวลารอ'}</small>${age} นาที</span>${o.completed?'<span class="archived">✓ ปิดแล้ว</span>':`<button class="btn primary" data-close="${id}" ${locked.has(o.id)?'disabled':''}>${icon('checkcircle')}ปิดบิล</button>`}</div></article>`;
  }
  let filter='all',timer,historyOrders=[],historyMessage='';
  $('tabs').onclick=async e=>{
@@ -156,8 +193,9 @@ document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.datase
   const next=active.map(o=>start(o)+limitMs+1).filter(t=>t>now);
   if(next.length)timer=setTimeout(render,Math.min(...next)-now);
   $('clock').textContent=time(now);$('date').textContent=new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short',year:'numeric'}).format(now);
-  const outstanding=active.reduce((sum,o)=>sum+(unsafeItems(o)?0:o.items.filter(i=>!i.done).length),0);
-  $('metrics').innerHTML=[['receipt','บิลที่เปิดอยู่',active.length,'บิล'],['timer','รอเกิน 30 นาที',overdue.length,'บิล'],['dish','เมนูที่ยังค้าง',outstanding,'เมนู'],['scan','รอรูป / AI',waiting.length,'บิล']].map(([im,label,n,u])=>`<div class="metric"><span class="metric-icon">${icon(im)}</span><div class="data"><small>${label}</small><b>${n}<span>${u}</span></b></div></div>`).join('');
+  const cooking=active.filter(o=>!unsafeItems(o)&&o.items.some(item=>!item.done)).length;
+  const readyCount=active.length-waiting.length-cooking;
+  $('metrics').innerHTML=[['receipt','บิลที่เปิดอยู่',active.length,'บิล'],['chef','กำลังทำ',cooking,'บิล'],['timer','รอเกิน 30 นาที',overdue.length,'บิล'],['checkcircle','ครบทุกเมนู',readyCount,'บิล']].map(([im,label,n,u])=>`<div class="metric"><span class="metric-icon">${icon(im)}</span><div class="data"><small>${label}</small><b>${n}<span>${u}</span></b></div></div>`).join('');
   $('tabs').innerHTML=[['all','บิลทั้งหมด',active.length],['late','รอนาน',overdue.length],['waiting','รอรูป / AI',waiting.length],['closed','ปิดแล้ว',null]].map(([id,label,n])=>`<button class="tab ${filter===id?'active':''}" aria-pressed="${filter===id}" data-filter="${id}">${label}${n===null?'':` <em>${n}</em>`}</button>`).join('');
   const pool={all:active,late:overdue,waiting,closed:historyOrders}[filter];
   const q=$('search').value.trim().toLowerCase();

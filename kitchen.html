@@ -1,7 +1,19 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0e263e"><title>LAYA Order · บอร์ดครัว</title><link rel="stylesheet" href="kitchen-board.css?v=glow1"><script src="firebase-config.js"></script><script src="flow-v2/receipt-parser.js?v=instant-dish-1"></script><script src="ai-config.js?v=instant-dish-1"></script><script src="ai-client.js?v=instant-dish-1" defer></script><script src="photo-jobs.js?v=instant-dish-1" defer></script><script src="photo-flow.js?v=glow1" defer></script></head><body data-mode="kitchen">
-<header class="mast"><div class="mastin"><div class="brand"><span class="brandmark" data-icon="chef"></span><strong>LAYA <span>Order</span></strong></div><div class="station"><i data-icon="pan"></i> หน้าครัว</div><div class="topright"><div class="datetime"><b id="clock"></b><small id="date"></small></div><button id="sound" class="sound" aria-pressed="false">เปิดเสียง</button><details class="more"><summary class="options" aria-label="เมนูเพิ่มเติม">•••</summary><nav><a href="hostess.html">ส่งบิล</a><button id="aiSetup">ตั้งค่า AI</button><a href="hostess-classic.html">Amenity / หน้าเดิม</a></nav></details></div></div></header>
-<main><div class="heading"><div class="titlerow"><h1>บอร์ดครัว</h1><span class="demo" id="connection" role="status">กำลังเชื่อมต่อ…</span></div><label class="search"><i data-icon="search"></i><input id="search" type="search" aria-label="ค้นหาโต๊ะ เลขบิล หรือเมนู" placeholder="ค้นหาโต๊ะ เลขบิล หรือเมนู"></label></div>
-<section class="metrics" aria-label="ภาพรวมครัว" id="metrics"></section>
-<section class="controls" aria-label="ตัวกรองบิล"><div class="tabs" id="tabs"></div><div class="sort"><i data-icon="sort"></i> รอนานก่อน</div></section>
-<section id="board" aria-label="บิลครัว"></section>
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0e263e"><title>THE TASTE | ORDER · บอร์ดครัว</title><link rel="stylesheet" href="taste-order.css?v=1"><script src="firebase-config.js"></script><script src="flow-v2/receipt-parser.js?v=instant-dish-1"></script><script src="ai-config.js?v=instant-dish-1"></script><script src="ai-client.js?v=instant-dish-1" defer></script><script src="photo-jobs.js?v=instant-dish-1" defer></script><script src="photo-flow.js?v=taste-1" defer></script></head><body data-mode="kitchen">
+<header class="masthead">
+  <div class="mast-inner">
+    <a class="brand" href="hostess.html">THE TASTE <span>ORDER</span></a>
+    <nav aria-label="หน้าหลัก"><a href="hostess.html"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5zM14 3v5h5M8 12h8M8 16h6"/></svg> ส่งบิล</a><a href="kitchen.html" aria-current="page"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 20v-7a4 4 0 0 1-3-4 4 4 0 0 1 5-4 4 4 0 0 1 6 0 4 4 0 0 1 5 4 4 4 0 0 1-3 4v7zm0-4h10"/></svg> หน้าครัว</a></nav>
+    <div class="clock"><b id="clock"></b><small id="date"></small></div>
+    <button id="sound" aria-pressed="false">เปิดเสียง</button>
+    <details class="more"><summary aria-label="เมนูเพิ่มเติม">•••</summary><div><button id="aiSetup">ตั้งค่า AI</button><a href="hostess-classic.html">Amenity / หน้าเดิม</a></div></details>
+  </div>
+</header>
+<main class="kitchen">
+  <div class="heading"><h1><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 20v-7a4 4 0 0 1-3-4 4 4 0 0 1 5-4 4 4 0 0 1 6 0 4 4 0 0 1 5 4 4 4 0 0 1-3 4v7zm0-4h10"/></svg> บอร์ดครัว</h1><span class="connection" id="connection" role="status">กำลังเชื่อมต่อ…</span></div>
+  <section class="metrics" aria-label="ภาพรวมครัว" id="metrics"></section>
+  <section class="controls" aria-label="ค้นหาและกรองบิล">
+    <div id="tabs"></div><label><input id="search" type="search" placeholder="ค้นหาโต๊ะ เลขบิล หรือเมนู" aria-label="ค้นหาโต๊ะ เลขบิล หรือเมนู"></label>
+  </section>
+  <p class="sort">รอนานก่อน</p>
+  <section id="board" aria-label="บิลครัว"></section>
 </main><dialog id="picture" class="receipt-dialog"><div class="dialog-head"><h2>รูปบิลต้นฉบับ</h2><button id="closePicture" type="button">ปิด ✕</button></div><img id="billImage" class="receipt" alt="บิลต้นฉบับ"></dialog><div id="toast" class="toast" role="status" hidden></div><dialog id="aiSettings"><form id="aiSettingsForm"><div class="dialog-head"><div><p class="eyebrow">CONNECTION SETTINGS</p><h2>เชื่อม AI อ่านบิล</h2></div></div><label>Worker URL<input id="aiEndpoint" type="url" required placeholder="https://kitchen-bill-reader.…workers.dev"></label><p class="meta">ตั้งค่าเพียงครั้งเดียวในเครื่องนี้ พนักงานส่งบิลได้ทันที</p><p id="aiSettingsError" class="error" role="alert"></p><div class="dialog-actions"><button id="aiCancel" type="button">ยกเลิก</button><button class="primary">บันทึกการตั้งค่า</button></div></form></dialog></body></html>
