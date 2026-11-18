@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Taste | Order</title>
+<style>
+:root {
+  color-scheme:light;
+  --ink:#101f3e; --muted:#596a81; --line:#dbe3ee; --blue:#104ab8;
+  --navy:linear-gradient(115deg,#103f89 0%,#082d68 47%,#061f4c);
+  --primary:linear-gradient(167deg,#2370eb 0%,#1356c7 47%,#09398c 100%);
+  --green:#126a47; --amber:#92520c;
+  font:16px/1.45 "Segoe UI","Leelawadee UI",Tahoma,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);background:#edf2f8}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid transparent;border-radius:10px;background:#fff;padding:9px 13px;font-weight:650;min-height:44px;transition:box-shadow .15s,transform .15s}
+button:disabled{cursor:default;opacity:.55}
+button:focus-visible,input:focus-visible{outline:3px solid #478dff;outline-offset:3px}
+button:active:not(:disabled){transform:translateY(2px)}
+[hidden]{display:none!important}
+h1,h2,p{margin:0} small,.meta{color:var(--muted)}.icon{width:1.24em;height:1.24em;vertical-align:-.23em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.bar,.device-brand{background:var(--navy);color:#fff}.bar-inner{max-width:1450px;margin:auto;display:flex;align-items:center;gap:20px;padding:12px 20px;flex-wrap:wrap}.brand,.wordmark{font-family:"Segoe UI",sans-serif;font-weight:650;letter-spacing:-.05em;font-size:22px}.brand span,.wordmark em{font-style:normal;font-size:.7em;font-weight:400;letter-spacing:.1em;margin-left:9px;padding-left:10px;border-left:1px solid #ffffff70}
+.brand small,.wordmark small{display:block;color:#d2dff1;font:11px "Segoe UI",sans-serif;letter-spacing:.055em;margin-top:4px}
+.header-tools,.nav,.mock-nav,.heading,.ticket-head,.tools,.footer,.dialog-actions,.preview-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.header-tools{margin-left:auto}.header-tools button,.device-brand button,.nav button{color:white;background:#ffffff12;border-color:#ffffff45}.clock,.device-clock{font-weight:700;font-size:22px;font-variant-numeric:tabular-nums}.clock small,.device-clock small{display:block;color:#d5e4fc;font-size:11px;font-weight:500}
+.nav [aria-pressed=true],.mock-nav button:first-child,.primary,.filters [aria-pressed=true]{background:var(--primary);color:white;border-color:#164caa;box-shadow:inset 0 1px 0 #ffffff57,0 2px 0 #063779,0 5px 10px #123e8225}
+.device-brand,.mock-nav,.phone-status{display:none}
+main{margin:auto;max-width:1520px;padding:22px}
+.host{max-width:450px;margin:auto;background:#f8fafd;border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.panel{padding:14px 16px}.heading{padding-bottom:12px}.heading h1,.queue-summary h2{font-size:20px;letter-spacing:-.035em}.heading h1 .icon,.queue-summary h2 .icon{color:#144d99}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:#e5efff;color:#15458c;font-size:13px;font-weight:700;white-space:nowrap}.pill.good{background:#def4e7;color:#12623c}.dot{width:8px;height:8px;border-radius:100%;background:#1da765}
+.capture{width:100%;display:grid;justify-items:center;gap:4px;padding:18px 8px;background:linear-gradient(165deg,#f1f7ff,#e5effd);border:1.5px dashed #7aa3df;border-radius:13px;box-shadow:inset 0 1px 1px #fff}
+.capture .icon{width:44px;height:44px;color:#1b54ad}.capture strong{font-size:20px}.capture small{font-weight:500;font-size:14px}
+.preview-row{justify-content:flex-start;background:#edf2f8;border:1px solid #dee7f1;border-radius:11px;overflow:hidden;margin:12px 0}
+.preview-row>div{flex:1;min-width:0}.preview-row small{display:block;font:12px/1.6 Consolas,monospace;overflow-wrap:anywhere}.remove{background:transparent;color:#5b6c86;padding:5px;min-width:44px}.send,.next{width:100%}.send{font-size:19px;padding:11px}.feedback{margin-top:10px;color:var(--green);font-size:14px}
+.queue-summary{background:white;margin:0 12px 12px;padding:13px;border:1px solid var(--line);border-radius:13px;box-shadow:0 3px 8px #1e365510}
+.queue-summary h2{font-size:17px;margin-bottom:9px}.queue-stats,.metrics,.board{display:grid;gap:9px}.queue-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stat{border-radius:11px;background:linear-gradient(140deg,#edf5ff,#dae9fc);color:#153e79;border:1px solid #d1e2f8}.stat.amber{background:linear-gradient(140deg,#fffaed,#faebce);border-color:#eedcb5;color:#844b10}.stat.red{background:#ffeded;color:#9c3337;border-color:#f1d4d4}.stat.green{background:linear-gradient(140deg,#effaf4,#d9efdf);color:#256346;border-color:#cee5d6}
+.queue-stats .stat{padding:9px 3px;text-align:center;font-size:13px;font-weight:600}.queue-stats b{display:block;font-size:25px}.next{margin-top:11px;border-color:#9aaecc;background:linear-gradient(#fff,#f5f8fd);color:#17427f;box-shadow:inset 0 1px white,0 2px 0 #d4dfe9}
+.metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:15px}.metrics .stat{display:flex;align-items:center;gap:12px;padding:13px 15px;font-size:14px;font-weight:650}.metrics .icon{width:28px;height:28px;flex:none}.metrics b{display:block;font:700 32px/1.1 "Segoe UI",sans-serif}
+.tools{margin:12px 0 16px;flex-wrap:wrap}.filters{display:flex;flex-wrap:wrap;background:#e9eef6;padding:3px;gap:2px;border-radius:11px}.filters button{background:transparent;font-size:14px;padding:6px 12px}.filters [aria-pressed=true]{background:var(--primary)}
+.search{width:min(100%,245px);padding:9px 13px;border-radius:10px;border:1px solid #c3d2e5;min-height:44px;background:#fbfdff}
+.board{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}.ticket{display:flex;flex-direction:column;gap:12px;padding:14px 12px 10px;min-width:0;border:1px solid #c9d9ec;border-top:4px solid #397be4;border-radius:13px;background:linear-gradient(160deg,white 75%,#f4f8ff);box-shadow:0 5px 12px #17345816,0 1px 2px #17345812}.ticket.late{border-top-color:#e4a33f}.ticket.ready{border-top-color:#28a368}
+.ticket-head{align-items:flex-start}.ticket-head h2{font:700 clamp(26px,2vw,37px)/1.1 "Segoe UI","Leelawadee UI",sans-serif;letter-spacing:-.035em}.ticket-head h2 small{font-size:.53em;color:#3c506b;margin-right:3px}.meta{font-size:13px;margin-top:5px}
+.receipt{display:grid;place-items:center;overflow:hidden;position:relative;width:76px;height:82px;flex:none;padding:0;border:1px solid #aeb4be;border-radius:9px;background:linear-gradient(132deg,#b1aaa0,#d8d4cc 44%,#a5a39f);box-shadow:inset 1px 2px 6px #17223922}
+.stub{display:block;background:linear-gradient(105deg,#eae8de,#fffdf5 42%,#eae8df);color:#383834;width:74%;padding:6px 4px;box-shadow:1px 3px 4px #181a1c60;transform:rotate(9deg);font:700 7px/1.4 Georgia,serif;text-align:center}.stub i,.stub label{display:block;border-top:1px dashed #83847c;margin-top:3px;padding-top:2px;font:5px/1.5 Consolas,monospace;pointer-events:none}.stub i{white-space:pre-line}
+.wordmark>span{position:relative}.wordmark>span:after{content:"";position:absolute;left:22%;right:0;bottom:-4px;height:5px;border-bottom:1.5px solid #f6fcff;border-radius:50%;transform:rotate(-3deg)}.preview-row .receipt{width:68px;height:66px;border-radius:8px}.dish{width:100%;display:grid;grid-template-columns:21px 1fr auto;align-items:center;gap:6px;text-align:left;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;font-size:15px;padding:7px 1px}.dish-name{line-height:1.25}.dish>span:last-child{color:#475a74;font-size:13px}.check{width:18px;height:18px;border:1.5px solid #7c8da7;border-radius:4px;text-align:center}.dish[aria-pressed=true] .check{background:#148550;color:white;border-color:#148550}.dish[aria-pressed=true] .dish-name{text-decoration:line-through;color:#576981}.dish:disabled{opacity:1}
+.notice{border-left:3px solid #dea341;background:#fff4df;color:#82500c;padding:5px 7px;font-size:13px;border-radius:3px}.footer{margin-top:auto;background:#eaf6ee;border-radius:9px;padding:9px;flex-wrap:wrap;gap:4px}.late .footer{background:#fff2db}.ready.late .footer{background:#fceeea}.timer{display:flex;align-items:center;gap:7px;color:#286747;font-size:12px;font-weight:650}.timer strong{display:block;font-size:21px;line-height:1.1}.late .timer{color:#8a530f}.ready.late .timer{color:#963b32}.footer button{padding:6px 9px;border-color:#c6d4e3;font-size:14px}.close{background:linear-gradient(#249662,#086b41);border-color:#08683e!important;color:white;box-shadow:inset 0 1px #ffffff50,0 2px #0c5536}
+dialog{width:min(90%,390px);border:1px solid var(--line);border-radius:16px;color:var(--ink);padding:20px;box-shadow:0 14px 60px #10264a55}dialog::backdrop{background:#0b203c88}dialog .receipt{width:158px;height:180px;margin:15px auto}dialog .stub{font-size:16px}dialog .stub i,dialog .stub label{font-size:10px}.dialog-actions{justify-content:flex-end;margin-top:14px}.dialog-actions button{border-color:var(--line)}
+@media(min-width:1200px){
+ body{min-height:100vh;display:grid;align-content:center;background:radial-gradient(ellipse at 32% 13%,#fbfdff,transparent 60%),linear-gradient(145deg,#e3eaf3,#eff4fa 58%,#ccd9e7)}
+ body>.bar{display:none}main{width:100%;max-width:1720px;display:grid;grid-template-columns:minmax(0,25fr) minmax(0,75fr);align-items:center;gap:18px;padding:28px 20px}
+ #host,#kitchen{width:100%;max-width:none;overflow:hidden;background:#fafcff;border:9px solid #151b21;outline:2px solid #9ba3aa;box-shadow:0 0 0 4px #e0e4e5,0 9px 11px #10233730,0 25px 35px -16px #102b476b}
+ #host{border-radius:39px}#kitchen{border-radius:28px;padding:0 14px 16px}
+ .device-brand{display:flex;align-items:center;justify-content:space-between;gap:7px}.wordmark{white-space:nowrap;font-size:clamp(18px,1.6vw,27px)}
+ #host .device-brand{justify-content:center;padding:16px 0 18px;text-align:center}
+ .phone-status{display:flex;justify-content:space-between;align-items:center;padding:6px 20px 0;color:white;background:#103d84;font:bold 12px "Segoe UI";position:relative}.phone-status i{position:absolute;left:50%;transform:translateX(-50%);width:60px;height:15px;border-radius:15px;background:#0b111a}
+ #kitchen .device-brand{margin:0 -14px 16px;padding:16px 14px}.device-brand>strong:nth-child(2){border-left:1px solid #ffffff60;padding-left:12px;font-size:clamp(17px,1.55vw,26px)}#kitchen>.heading{display:none}
+ .device-brand>.good{background:#124e53;color:#e2faee}.device-brand>.good .dot{background:#69dc9d}
+ .mock-nav{display:flex;margin:0 12px 11px;gap:6px}.mock-nav button{flex:1;background:transparent;color:#22467c}.mock-nav button:first-child{background:var(--primary);color:white}
+ #host .heading{flex-wrap:wrap}.metrics .stat{padding:12px 10px}
+}
+@media(min-width:1500px){.panel{padding:18px}.capture{padding:24px 10px}.ticket{padding:18px 16px 12px}.receipt{width:90px;height:94px}.dish{min-height:49px}.metrics .stat{padding:16px;font-size:17px}.ticket-head h2{font-size:36px}.ticket .meta{font-size:15px}.dish{font-size:17px}.timer strong{font-size:26px}.ticket .pill{font-size:15px}.queue-summary h2{font-size:19px}.device-brand>strong:nth-child(2){font-size:27px}.board{gap:14px}}
+@media(max-width:999px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){main{padding:12px 10px 90px}.host{border-radius:15px}.bar-inner{gap:8px;padding:10px 15px}.nav{position:fixed;z-index:4;inset:auto 0 0;background:#f8fbff;padding:7px 12px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--line);box-shadow:0 -3px 12px #18365312}.nav button{flex:1;color:#22467c}.nav [aria-pressed=true]{color:white}.header-tools{width:100%}.board{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics .stat{padding:10px}.search{width:100%}.filters{width:100%}.filters button{flex:1;padding-inline:4px}.heading{flex-wrap:wrap}.heading h1{font-size:20px}.ticket{padding:15px}}
+@media(hover:hover){button:not(:disabled):hover{filter:brightness(.97)}.primary:not(:disabled):hover,.close:hover{filter:brightness(1.08)}}
+@media(prefers-reduced-motion:reduce){button{transition:none}button:active:not(:disabled){transform:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<symbol id="camera" viewBox="0 0 24 24"><path d="M4 6h4l2-3h4l2 3h4a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></symbol>
+<symbol id="bill" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5zM14 3v5h5M8 11h8M8 15h8M8 18h5"/></symbol>
+<symbol id="clock-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+<symbol id="check-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+<symbol id="chef" viewBox="0 0 24 24"><path d="M7 20v-7a4 4 0 0 1-3-4 4 4 0 0 1 5-4 4 4 0 0 1 6 0 4 4 0 0 1 5 4 4 4 0 0 1-3 4v7zm0-4h10"/></symbol>
+<symbol id="send-icon" viewBox="0 0 24 24"><path d="m3 10 18-7-7 18-3-8-8-3Zm8 3L21 3"/></symbol>
+</svg>
+<header class="bar"><div class="bar-inner">
+<strong class="brand">THE TASTE<span>ORDER</span><small>พรีวิว · ข้อมูลจำลอง</small></strong>
+<nav class="nav" aria-label="หน้าหลัก"><button data-view="host" aria-pressed="true">ส่งบิล</button><button data-view="kitchen" aria-pressed="false">บอร์ดครัว</button></nav>
+<div class="header-tools" id="kitchenTools" hidden><span class="pill good"><i class="dot"></i> เชื่อมต่อ · จำลอง</span><button id="sound" aria-pressed="false">เปิดเสียง</button><span class="clock">10:24<small>เวลาในตัวอย่าง</small></span></div>
+</div></header>
+<main>
+<section id="host" class="host"><div class="phone-status" aria-hidden="true"><span>10:24</span><i></i><span>▮▮▮ ▰</span></div><div class="device-brand"><strong class="wordmark"><span>THE TASTE</span><em>ORDER</em><small>พรีวิว · ข้อมูลจำลอง</small></strong></div>
+  <section class="panel">
+    <div class="heading"><h1><svg class="icon" aria-hidden="true"><use href="#bill"/></svg> ส่งบิลเข้าครัว</h1><span class="pill good"><i class="dot"></i> เชื่อมต่อ · จำลอง</span></div>
+    <button class="capture" id="capture"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg><strong>ถ่ายรูป / เลือกรูปบิล</strong><small>เลือกรูปบิลตัวอย่างเพื่อตรวจและส่งเข้าครัว</small></button>
+    <div class="row preview-row" id="selection"><span class="receipt" aria-hidden="true"><span class="stub">THE TASTE<label>KITCHEN TICKET</label><i>TABLE · QTY<br>1 × MENU</i></span></span><div><strong>รูปพร้อมส่ง</strong><small id="filename">BILL-001248.jpg</small></div><button class="remove" id="remove" aria-label="ลบรูปที่เลือก">✕</button></div>
+    <button class="primary send" id="send"><svg class="icon" aria-hidden="true"><use href="#send-icon"/></svg> ส่งเข้าครัว</button>
+    <p class="feedback" id="feedback" role="status" hidden></p>
+  </section>
+  <section class="panel queue-summary">
+    <h2><svg class="icon" aria-hidden="true"><use href="#bill"/></svg> สถานะการส่ง</h2>
+    <div class="queue-stats" aria-live="polite"><div class="stat">รอส่ง<b id="queued">2</b></div><div class="stat amber">กำลังส่ง<b>1</b></div><div class="stat red">ส่งไม่สำเร็จ<b>0</b></div></div>
+    <button class="next" id="next"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg> ถ่ายบิลถัดไป</button>
+  </section>
+<div class="mock-nav" aria-label="ทางลัดในพรีวิว"><button id="wideCapture">ส่งบิล</button><button id="wideKitchen">หน้าครัว</button></div></section>
+<section id="kitchen" hidden aria-label="บอร์ดครัว"><div class="device-brand"><strong class="wordmark"><span>THE TASTE</span><em>ORDER</em></strong><strong><svg class="icon" aria-hidden="true"><use href="#chef"/></svg> บอร์ดครัว</strong><span class="pill good"><i class="dot"></i> เชื่อมต่อ · จำลอง</span><button id="wideSound" aria-pressed="false">เปิดเสียง</button><span class="device-clock">10:24<small>19 พ.ย. 2569</small></span></div>
+  <div class="heading"><h1 id="kitchen-title"><svg class="icon" aria-hidden="true"><use href="#chef"/></svg> บอร์ดครัว</h1><small>เรียงตามโต๊ะ</small></div>
+  <section class="metrics" aria-label="ภาพรวมครัว" id="metrics"></section>
+  <div class="tools">
+    <div class="filters" aria-label="ตัวกรองบิล"><button data-filter="all" aria-pressed="true">ทั้งหมด</button><button data-filter="late" aria-pressed="false">รอนาน</button><button data-filter="waiting" aria-pressed="false">รอรูป / AI</button><button data-filter="closed" aria-pressed="false">ปิดแล้ว</button></div>
+    <input class="search" type="search" id="search" aria-label="ค้นหาโต๊ะ เลขบิล หรือเมนู" placeholder="ค้นหาโต๊ะ เลขบิล หรือเมนู">
+  </div>
+  <div class="board" id="board"></div>
+</section>
+</main>
+<dialog id="dialog" aria-labelledby="dialogTitle"><h2 id="dialogTitle"></h2><p id="dialogText"></p><div id="dialogReceipt"></div><form method="dialog" class="dialog-actions"><button value="cancel">ปิด</button><button id="confirm" class="close" value="confirm">ยืนยันปิดบิล</button></form></dialog>
+<script>
+const get = id => document.getElementById(id);
+const icon = id => '<svg class="icon" aria-hidden="true"><use href="#'+id+'"/></svg>';
+const stub = '<span class="stub" aria-hidden="true">THE TASTE<label>KITCHEN TICKET</label><i>TABLE  ·  QTY<br>ORDER SLIP<br>................<br>1  ×  MENU</i></span>';
+const orders = [
+  {table:'C03',bill:'001247',age:44,time:'09:40',dishes:[['Wagyu Beef Steak',1,true],['French Fries',1,true],['Truffle Sauce',1,true]]},
+  {table:'B06',bill:'001246',age:32,time:'09:52',dishes:[['Grilled Salmon',1,false],['Mashed Potato',1,false],['Mixed Salad',1,false]],allergy:'แพ้ถั่ว · ตรวจรูปบิลต้นฉบับ'},
+  {table:'A12',bill:'001245',age:19,time:'10:05',dishes:[['Pad Thai Goong',1,false],['Tom Yum Goong',1,false],['Caesar Salad',1,false]]},
+
+  {table:'T04',bill:'001243',age:22,time:'09:15',dishes:[['ข้าวผัด',1,true]],closed:true}
+];
+let filter='all', selected=true, sent=0, toClose=null;
+const ready = order => order.dishes.length>0 && order.dishes.every(dish=>dish[2]);
+const overdue = order => !order.closed && order.age>30;
+function showSelection(value){
+  selected=value;
+  get('selection').hidden=!selected;
+  get('send').disabled=!selected;
+  get('filename').textContent='BILL-'+String(1248+sent).padStart(6,'0')+'.jpg';
+}
+const wideLayout=matchMedia('(min-width: 1200px)');
+let currentView=matchMedia('(min-width: 700px) and (max-width: 1199px)').matches?'kitchen':'host';
+function showViews(){
+  for(const tab of document.querySelectorAll('[data-view]')) tab.setAttribute('aria-pressed',tab.dataset.view===currentView);
+  get('host').hidden=!wideLayout.matches&&currentView!=='host';
+  get('kitchen').hidden=!wideLayout.matches&&currentView!=='kitchen';
+  get('kitchenTools').hidden=currentView!=='kitchen';
+}
+wideLayout.addEventListener('change',showViews);
+document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>{
+  currentView=button.dataset.view;
+  for(const tab of document.querySelectorAll('[data-view]')) tab.setAttribute('aria-pressed',tab===button);
+  showViews();
+});
+get('wideCapture').onclick=()=>get('capture').focus();
+get('wideKitchen').onclick=()=>get('search').focus();
+showViews();
+get('capture').onclick=get('next').onclick=()=>{
+  showSelection(true);
+  get('feedback').hidden=true;
+  get('send').focus();
+};
+get('remove').onclick=()=>{showSelection(false);get('capture').focus();};
+get('send').onclick=()=>{
+  if(!selected)return;
+  const bill=String(1248+sent).padStart(6,'0');
+  sent++;
+  get('queued').textContent=2+sent;
+  get('feedback').textContent='เพิ่มบิล #'+bill+' เข้าคิวจำลองแล้ว';
+  get('feedback').hidden=false;
+  showSelection(false);
+  get('next').focus();
+};
+get('sound').onclick=get('wideSound').onclick=()=>{
+  const enabled=get('sound').getAttribute('aria-pressed')==='false';
+  get('sound').setAttribute('aria-pressed',enabled);
+  get('sound').textContent=enabled?'ปิดเสียง':'เปิดเสียง';
+  get('wideSound').setAttribute('aria-pressed',enabled);
+  get('wideSound').textContent=get('sound').textContent;
+};
+document.querySelectorAll('[data-filter]').forEach(button=>button.onclick=()=>{
+  filter=button.dataset.filter;
+  for(const option of document.querySelectorAll('[data-filter]')) option.setAttribute('aria-pressed',option===button);
+  render();
+});
+get('search').oninput=render;
+function render(){
+  const active=orders.filter(order=>!order.closed);
+  const late=active.filter(overdue);
+  const waiting=active.filter(order=>order.waiting);
+  const metrics=[['bill','บิลที่เปิดอยู่',active.length,''],['chef','กำลังทำ',active.filter(order=>!order.waiting&&!ready(order)).length,''],['clock-icon','รอเกิน 30 นาที',late.length,'amber'],['check-icon','ครบทุกเมนู',active.filter(ready).length,'green']];
+  get('metrics').innerHTML=metrics.map(([symbol,label,count,tone])=>'<div class="stat '+tone+'">'+icon(symbol)+'<span>'+label+'<b>'+count+'</b></span></div>').join('');
+  const list={all:active,late,waiting,closed:orders.filter(order=>order.closed)}[filter];
+  const query=get('search').value.trim().toLowerCase().replace(/^#/,'');
+  const filtered=[...list].sort((first,second)=>first.table.localeCompare(second.table)).filter(order=>[order.table,order.bill,...order.dishes.map(dish=>dish[0])].some(value=>value.toLowerCase().includes(query)));
+  get('board').innerHTML=filtered.map(order=>{
+    const index=orders.indexOf(order);
+    const status=order.closed?'ปิดแล้ว':order.waiting?'AI กำลังอ่าน':ready(order)?'เสร็จแล้ว (ครบถ้วน)':'กำลังทำ';
+    const dishes=order.dishes.map(([name,quantity,done],item)=>'<button class="dish" data-order="'+index+'" data-item="'+item+'" aria-pressed="'+done+'" '+(order.closed?'disabled':'')+'><span class="check" aria-hidden="true">'+(done?'✓':'')+'</span><span class="dish-name">'+name+'</span><span>×'+quantity+'</span></button>').join('');
+    return '<article class="ticket '+(overdue(order)?'late ':'')+(ready(order)?'ready':'')+'"><div class="ticket-head"><div><h2><small>โต๊ะ</small> '+order.table+'</h2><p class="meta">'+icon('bill')+' บิล #'+order.bill+'</p><p class="meta">'+icon('clock-icon')+' รับบิล '+order.time+'</p></div><button class="receipt" data-picture="'+index+'" aria-label="ดูรูปบิล '+order.bill+'">'+stub+'</button></div>'
+      +'<div><span class="pill '+(ready(order)?'good':'')+'">'+icon(ready(order)?'check-icon':'chef')+' '+status+'</span></div>'
+      +'<div>'+dishes+(order.waiting?'<p class="notice">รอรายการอาหารจากรูปบิล</p>':'')+'</div>'
+      +(order.allergy?'<p class="notice">'+order.allergy+'</p>':'')
+      +'<div class="footer"><div class="timer">'+icon('clock-icon')+'<span>'+(overdue(order)?'เกิน 30 นาที':'ระยะเวลารอ')+'<strong>'+order.age+' นาที</strong></span></div>'
+      +(order.closed?'':'<button class="'+(ready(order)?'close':'')+'" data-close="'+index+'">ปิดบิล</button>')+'</div></article>';
+  }).join('')||'<p class="empty" role="status">ไม่พบบิล</p>';
+}
+get('board').onclick=event=>{
+  const button=event.target.closest('button');
+  if(!button)return;
+  if(button.dataset.item!==undefined){
+    const {order,item}=button.dataset;
+    orders[order].dishes[item][2]=!orders[order].dishes[item][2];
+    render();
+    get('board').querySelector('[data-order="'+order+'"][data-item="'+item+'"]').focus();
+    return;
+  }
+  const closing=button.dataset.close!==undefined;
+  toClose=closing?Number(button.dataset.close):null;
+  const order=orders[closing?toClose:Number(button.dataset.picture)];
+  get('dialogTitle').textContent=closing?'ปิดบิล #'+order.bill+' หรือไม่':'รูปบิลตัวอย่าง';
+  get('dialogText').textContent=closing?(ready(order)?'ทำครบทุกเมนูแล้ว':'บิลนี้ยังมีรายการที่ต้องตรวจสอบ'):'โต๊ะ '+order.table+' · บิล #'+order.bill;
+  get('dialogReceipt').innerHTML=closing?'':'<div class="receipt">'+stub+'</div>';
+  get('confirm').hidden=!closing;
+  get('dialog').returnValue='';
+  get('dialog').showModal();
+};
+get('dialog').onclose=()=>{
+  if(get('dialog').returnValue==='confirm'&&toClose!==null){
+    orders[toClose].closed=true;
+    render();
+    document.querySelector('[data-filter][aria-pressed=true]').focus();
+  }
+};
+showSelection(true);
+render();
+</script>
+</body>
+</html>
+
+
+
+
+
+
