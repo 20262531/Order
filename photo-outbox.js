@@ -10,6 +10,10 @@ root.PhotoOutbox={open:async function(){
  return {
  draft:()=>new Promise((resolve,reject)=>{const q=db.transaction('pending').objectStore('pending').get('current');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);}),
  saveDraft:value=>transaction(['pending'],tx=>{const s=tx.objectStore('pending');if(value)s.put(value,'current');else s.delete('current');}),
+ discardDraft:id=>transaction(['pending'],tx=>{
+  const drafts=tx.objectStore('pending'),current=drafts.get('current');
+  current.onsuccess=()=>{if(current.result?.id===id)drafts.delete('current');};
+ }),
  enqueue:job=>transaction(['pending','uploads'],tx=>{const s=tx.objectStore('uploads'),q=s.get(job.id);q.onsuccess=()=>{if(!q.result)s.put({...job,status:'waiting',queuedAt:Date.now()},job.id);tx.objectStore('pending').delete('current');};}),
  list:()=>new Promise((resolve,reject)=>{const q=db.transaction('uploads').objectStore('uploads').getAll();q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);}),
  claim:(id,owner)=>transaction(['uploads'],(tx,done)=>{const s=tx.objectStore('uploads'),q=s.get(id);q.onsuccess=()=>{const j=q.result;if(!j||j.status==='error'||(j.status==='uploading'&&j.leaseUntil>Date.now()))return done(null);const next={...j,status:'uploading',owner,leaseUntil:Date.now()+600000};s.put(next,id);done(next);};}),
