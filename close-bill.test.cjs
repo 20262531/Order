@@ -6,7 +6,7 @@ for(const patch of [{text:'2 × Pad Thai'},{done:true},{id:'b'},{raw:'different'
 const source=fs.readFileSync(__dirname+'/photo-flow.js','utf8');const a=source.indexOf(" $('board').onclick=async"),b=source.indexOf(';setInterval(render',a);const handler=source.slice(a,b)+';';
 async function clickClose({items=original,latestItems=reordered,confirm=true,status='done',completed=false}={}){
  const board={},writes=[],messages=[];const displayed={id:'test',items,ocrStatus:status,createdAtMs:Date.now()-10000,notes:'',completed:false};
- const latest={...displayed,items:latestItems,completed};const context={$:()=>board,orders:[displayed],locked:new Set(),render(){},online:true,db:{},created:id=>id,PhotoJobs:J,message:s=>messages.push(s),window:{confirm:()=>confirm},f:{serverTimestamp:()=>0,runTransaction:async(db,fn)=>fn({get:async()=>({exists:()=>true,data:()=>latest}),update:(ref,patch)=>writes.push(patch)})}};
+ const latest={...displayed,items:latestItems,completed};const context={$:()=>board,orders:[displayed],locked:new Set(),dishEdits:new Map(),render(){},online:true,db:{},created:id=>id,PhotoJobs:J,message:s=>messages.push(s),window:{confirm:()=>confirm},f:{serverTimestamp:()=>0,runTransaction:async(db,fn)=>fn({get:async()=>({exists:()=>true,data:()=>latest}),update:(ref,patch)=>writes.push(patch)})}};
  vm.runInNewContext(handler,context);await board.onclick({target:{closest:()=>({dataset:{close:'test'}})}});return {writes,messages,context};
 }
 (async()=>{

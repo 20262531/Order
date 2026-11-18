@@ -69,7 +69,32 @@ if(mode==='hostess'){
  }
  $('camera').onchange=async()=>{const file=$('camera').files[0];if(!file)return;if(working||pending?.attempted||pending?.published){message('มีรูปค้างอยู่ กรุณาลองส่งรูปเดิมให้เสร็จก่อน');$('camera').value='';return;}if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>=8*1024*1024){message('เลือกรูป JPG / PNG / WebP ต่ำกว่า 8 MB');return;}try{$('camera').disabled=true;$('upload').disabled=true;const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');pending={id:'photo-'+hash,file};await save(pending);$('preview').src=URL.createObjectURL(file);$('preview').hidden=false;$('camera').value='';$('upload').disabled=false;$('retry').hidden=true;$('next').hidden=true;message('เลือกรูปแล้ว • ตรวจภาพ แล้วกดอัปโหลดและส่งเข้าครัว');}catch(e){message('บันทึกรูปในเครื่องไม่ได้: '+e.message);$('upload').disabled=true;}finally{$('camera').disabled=false;}};$('upload').onclick=send;$('retry').onclick=send;$('next').onclick=async()=>{if(working||!pending?.published)return;await save(null);pending=null;$('upload').disabled=true;$('retry').hidden=true;$('next').hidden=true;message('รูปบิลก่อนหน้ายังอยู่ในครัว เปิดรูปและกดอ่านใหม่จากหน้าครัวได้ • พร้อมถ่ายบิลถัดไป');};
 }else{
+ const paths = {
+ chef:'<path d="M6 15a4.5 4.5 0 0 1-1-8.9A5.5 5.5 0 0 1 15 5a4.8 4.8 0 1 1 3 9.2V20H6zM6 17h12M9 12v3m3-4v4m3-3v3"/>',
+ pan:'<path d="M3 12h13a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6Zm13 1 6-3M7 8c-2-2 2-2 0-4m5 4c-2-2 2-2 0-4"/>',
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+ timer:'<circle cx="12" cy="14" r="8"/><path d="M10 2h4m-2 0v4m6 1 2-2m-8 5v5"/>',
+ receipt:'<path d="M5 3l2 1.5L9.5 3 12 4.5 14.5 3 17 4.5 19 3v18l-2-1.5-2.5 1.5-2.5-1.5-2.5 1.5L7 19.5 5 21zM9 8h6m-6 4h6m-6 4h4"/>',
+ dish:'<path d="M3 16h18M5 15a7 7 0 0 1 14 0m-7-7V6m-1-1h2M4 19h16"/>',
+ scan:'<path d="M3 8V4h4m10 0h4v4m0 8v4h-4M7 20H3v-4m5-9h8v10H8zM10 10h4m-4 3h3"/>',
+ grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+ image:'<rect x="3" y="3.5" width="18" height="17" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 3-3 5 5"/>',
+ closebill:'<path d="M11 4H5v16h14v-7m-8 1 8-8m-6 0h6v6"/>',
+ check:'<path d="m5 12 4 4 10-10"/>', checkcircle:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+ warn:'<path d="m10.4 4.5-8 14A1.6 1.6 0 0 0 4 21h16a1.6 1.6 0 0 0 1.5-2.5l-8-14a1.8 1.8 0 0 0-3.1 0Z"/><path d="M12 9v5m0 3v.1"/>',
+ sort:'<path d="M6 4v16m-3-3 3 3 3-3m2-11h10m-10 5h7m-7 5h4"/>',
+ search:'<circle cx="10" cy="10" r="6.5"/><path d="m15 15 5 5"/>',
+ volume:'<path d="M3 9h4l5-5v16l-5-5H3zM16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',
+ mute:'<path d="M3 9h4l5-5v16l-5-5H3zM16 9l5 6m0-6-5 6"/>',
+ settings:'<circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/>',
+ upload:'<path d="M7 18H6a4.5 4.5 0 0 1-.5-9A7 7 0 0 1 19 9.5a4.3 4.3 0 0 1-.5 8.5H17m-5 2V11m-4 4 4-4 4 4"/>',
+ expand:'<path d="M13 4h7v7m0-7-9 9m-1-8H4v15h15v-6"/>',x:'<path d="m6 6 12 12M6 18 18 6"/>',
+ reset:'<path d="M4 11a8 8 0 1 1 2 7m-3-13v6h6"/>',tablet:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M18 11v2"/>'
+};
+const icon = name => '<svg aria-hidden="true" viewBox="0 0 24 24">'+paths[name]+'</svg>';
+document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
  const audio=new Audio('assets/alerts/chef-alert.mp3');$('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'เสียงเปิดอยู่':'เปิดเสียง';$('sound').setAttribute('aria-pressed',String(sound));if(sound)audio.play().catch(()=>message('กรุณาเปิดเสียงอุปกรณ์'));};
+ $('sound').textContent='เปิดเสียง';
  const dishEdits=new Map();let savingDishes=false;
  function displayed(o){return {...o,items:(o.items||[]).map(i=>{const e=dishEdits.get(o.id+'/'+i.id);return e?{...i,done:e.done}:i;})};}
  async function flushDishes(){if(savingDishes||!dishEdits.size)return;savingDishes=true;
@@ -77,40 +102,77 @@ if(mode==='hostess'){
  try{await f.runTransaction(db,async tx=>{const ref=created(edit.order),snap=await tx.get(ref);if(!snap.exists()||snap.data().completed||snap.data().softDeleted)throw Error('บิลปิดแล้ว');const o=snap.data();if(!o.items.some(i=>i.id===edit.item&&i.text===edit.text))throw Error('รายการเปลี่ยน กรุณาตรวจใหม่');tx.update(ref,{items:o.items.map(i=>i.id===edit.item?{...i,done:edit.done}:i),updatedAt:f.serverTimestamp()});});
  const o=orders.find(o=>o.id===edit.order);if(o)o.items=o.items.map(i=>i.id===edit.item?{...i,done:edit.done}:i);
  if(dishEdits.get(key)===edit)dishEdits.delete(key);
- }catch(e){for(const [k,v] of dishEdits)if(v.order===edit.order)dishEdits.delete(k);message('บันทึกเมนูไม่สำเร็จ เครื่องหมายคืนค่าล่าสุด: '+e.message);}render();}
+ }catch(e){if(dishEdits.get(key)===edit)dishEdits.delete(key);message('บันทึกเมนูไม่สำเร็จ เครื่องหมายคืนค่าล่าสุด: '+e.message);}render();}
  }finally{savingDishes=false;render();}}
  window.addEventListener('beforeunload',e=>{if(dishEdits.size){e.preventDefault();e.returnValue='';}});
- function render(){
- const active=orders.filter(o=>!o.completed&&!o.softDeleted);
- if($('activeCount'))$('activeCount').textContent=active.length;
- if($('pendingCount'))$('pendingCount').textContent=active.filter(o=>!(o.items||[]).length).length;
- if($('lateCount'))$('lateCount').textContent=active.filter(o=>Date.now()-o.createdAtMs>=1800000).length;
- const q=$('search').value.toLowerCase();
- const visible=orders.filter(o=>!o.completed&&!o.softDeleted&&[ReceiptParser.normalizeTable(o.tableNo),o.tableNo,o.billNo,...(o.items||[]).map(i=>i.text)].join(' ').toLowerCase().includes(q)).sort((a,b)=>a.createdAtMs-b.createdAtMs);
- $('board').innerHTML=visible.map(source=>{const o=displayed(source);
- const aiReading=PhotoJobs.isReading(o),aiQueued=o.ocrStatus==='ai_queued';
- const unsafe=(o.items||[]).some(i=>ReceiptParser.isUnsafeItem({text:i.text}));
- const rows=unsafe?[]:(o.items||[]),done=rows.filter(i=>i.done).length,minutes=Math.max(0,Math.floor((Date.now()-o.createdAtMs)/60000)),all=rows.length>0&&done===rows.length;
- const note=o.notes||'ตรวจชื่อเมนู จำนวน และหมายเหตุกับรูปบิล';
- const important=(o.items||[]).some(i=>/แพ้|allerg|anaphyl/i.test(i.text))||note.split('\n').filter(line=>line!=='AI อ่านจากภาพ • ตรวจรูปต้นฉบับ โดยเฉพาะข้อมูลแพ้อาหาร').some(line=>/แพ้|allerg|anaphyl/i.test(line));const metadataMissing=o.ocrStatus==='done'&&(!o.tableNo||!o.billNo);
- return `<article class="ticket compact-ticket ${minutes>=25?'ticket-late':''} ${all?'ticket-checked':''}">
- <div class="compact-head"><div><span class="ticket-label">โต๊ะ / ห้อง</span><h3>${esc(ReceiptParser.normalizeTable(o.tableNo)||'ดูโต๊ะจากรูป')}</h3><div class="meta">${esc(o.billNo||(o.ocrStatus==='done'?'ดูเลขบิลจากรูป':'รออ่านเลขบิล'))}</div></div><div class="compact-time"><strong>${minutes}</strong><span>นาที</span></div></div>
- ${unsafe?'<div class="ticket-note">รายการเดิมมีข้อความผิดรูปแบบ • ใช้รูปบิลก่อน และกดอ่านใหม่</div>':''}
- <div class="compact-toolbar"><span class="completion-label">${[...dishEdits.values()].some(e=>e.order===o.id)?'กำลังบันทึก…':all?'✓ ครบแล้ว':`เสร็จ ${done}/${rows.length} รายการ`}</span>${o.imageUrl?`<button data-image="${o.id}" class="receipt-button">ดูรูปบิล ↗</button><button data-read="${o.id}" class="receipt-button" ${locked.has(o.id)||aiReading||aiQueued?'disabled':''}>อ่านใหม่</button>`:''}</div>
- <div class="compact-progress" aria-label="ทำเสร็จ ${done} จาก ${rows.length} รายการ"><span style="width:${rows.length?Math.round(done/rows.length*100):0}%"></span></div>
- <div class="compact-menu">${!rows.length&&o.imageUrl?`<button class="pending-preview" data-image="${o.id}" aria-label="ขยายรูปบิล"><img src="${esc(o.imageUrl)}" alt="รูปบิลที่ส่งถึงครัวแล้ว" loading="lazy"><span>แตะเพื่อขยายรูปบิล</span></button>`:''}${rows.length?rows.map(i=>{
- const parts=String(i.text||'').split('\n'),main=parts.shift();
- return `<button class="dish ${/แพ้|allerg|anaphyl/i.test(i.text)?'dish-allergy':''} ${i.done?'done':''}" data-order="${o.id}" data-item="${esc(i.id)}" ${locked.has(o.id)?'disabled':''} aria-pressed="${!!i.done}"><span class="dish-check" aria-hidden="true">${i.done?'✓':''}</span><span class="dish-content"><span class="dish-title">${esc(main)}</span>${parts.length?`<small>${esc(parts.join(' · '))}</small>`:''}</span></button>`;
- }).join(''):`<div class="ocr-error">${unsafe?'รายการเดิมอ่านคลาดเคลื่อน • กดอ่านใหม่ด้วย AI':o.ocrStatus==='photo_upload_error'?'ยังรับรูปไม่สำเร็จ • ให้ Hostess ลองส่งอีกครั้ง':o.ocrStatus==='photo_uploading'?'กำลังรับรูปจาก Hostess…':o.ocrStatus==='error'?'การอ่านครั้งก่อนยังไม่สำเร็จ • ดูรูปหรืออ่านใหม่':aiReading?'AI กำลังอ่านเบื้องหลัง…':aiQueued?'รูปส่งถึงครัวแล้ว • รอ AI อ่าน':locked.has(o.id)?'กำลังอ่านรูป…':'รอผลอ่านรูป • หากปิดหน้าส่งบิลก่อนเสร็จ กดอ่านใหม่ได้'}<button data-read="${o.id}" ${!o.imageUrl||locked.has(o.id)||aiReading||aiQueued?'disabled':''}>อ่านรูปนี้ใหม่</button></div>`}</div>
- <details class="compact-notes" ${important||metadataMissing||o.ocrStatus==='error'?'open':''}><summary>${important?'⚠ ข้อมูลแพ้อาหาร / หมายเหตุ':metadataMissing?'⚠ ตรวจโต๊ะ / เลขบิลจากรูป':o.ocrStatus==='error'?'สาเหตุที่อ่านไม่สำเร็จ':'ข้อมูลการอ่านบิล'}</summary><div>${esc(note)}</div></details>
- <div class="ticket-bottom"><button data-close="${o.id}" ${locked.has(o.id)?'disabled':''} class="primary full-button">${locked.has(o.id)?'กำลังบันทึก…':all?'✓ ปิดบิลนี้':'ปิดบิลนี้'}</button></div></article>`;
- }).join('')||'<div class="empty">ยังไม่มีบิลในรายการนี้</div>';
- if($('boardCount'))$('boardCount').textContent=visible.length+' บิล';
+ const limitMs = 30 * 60000;
+ const time = t => new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(t);
+ const start = o => Number(o.createdAtMs) || o.createdAt?.toMillis?.() || 0;
+ const late = (o, now) => !o.completed && start(o)>0 && now-start(o)>limitMs;
+ const unsafeItems = o => (o.items||[]).some(i=>ReceiptParser.isUnsafeItem({text:i.text}));
+ function stage(o) {
+  if(unsafeItems(o))return 'ตรวจรายการจากรูปบิล';
+  if(o.items?.length)return 'พร้อมทำอาหาร';
+  if(o.ocrStatus==='photo_upload_error')return 'ส่งรูปไม่สำเร็จ';
+  if(!o.imageUrl)return 'กำลังส่งรูป';
+  if(o.ocrStatus==='error')return 'อ่านรูปไม่สำเร็จ';
+  return PhotoJobs.isReading(o)?'AI กำลังอ่าน':'รอ AI อ่าน';
  }
-
+ function dish(o,i){
+  const parts=String(i.text||'').split('\n'),qty=parts[0].match(/^(\d+)\s*[×x]\s*(.+)$/);
+  if(qty)parts[0]=qty[2];
+  return `<button class="dish ${i.done?'done':''}" data-order="${esc(o.id)}" data-item="${esc(i.id)}" aria-pressed="${!!i.done}" ${locked.has(o.id)||o.completed?'disabled':''}><span class="check">${i.done?icon('check'):''}</span><span class="name">${esc(parts.join('\n'))}</span>${qty?`<span class="qty">×${esc(qty[1])}</span>`:''}</button>`;
+ }
+ function card(o,now){
+  const id=esc(o.id),items=unsafeItems(o)?[]:o.items||[],left=items.filter(i=>!i.done).length;
+  const dt=start(o),age=dt?Math.max(0,Math.floor(((o.completed?o.completedAtMs:now)-dt)/60000)):'–';
+  const overdue=late(o,now), label=stage(o), notes=String(o.notes||'');
+  const warnings=[...new Set([...(o.items||[]).map(i=>i.text),...notes.split('\n')].filter(s=>s&&/แพ้|allerg|anaphyl/i.test(s)&&s!=='AI อ่านจากภาพ • ตรวจรูปต้นฉบับ โดยเฉพาะข้อมูลแพ้อาหาร'))];
+  const saving=[...dishEdits.values()].some(e=>e.order===o.id);
+  return `<article class="ticket ${items.length?'':'wait'} ${overdue?'late':''}"><div class="ticket-head"><div><h2 class="table-title">โต๊ะ <strong>${esc(ReceiptParser.normalizeTable(o.tableNo)||'—')}</strong></h2><div class="identifier">${icon('receipt')}${esc(o.billNo||'รอเลขบิล')}</div></div><div class="when"><span class="elapsed">${overdue?'<span class="late-lamp" aria-hidden="true"></span>เกิน 30 นาที · ':icon('clock')}${age} นาที</span><small>เริ่ม ${dt?time(dt):'—'} น.</small></div></div>
+  <div class="summary"><div class="line"><span class="leftcount">${items.length?(left?`ค้าง <b>${left}</b> เมนู`:'✓ ครบทุกเมนู'):'รอรายการอาหาร'}</span><span class="status">${icon(items.length?'dish':'scan')}${saving?'กำลังบันทึก…':o.completed?'ปิดแล้ว':label}</span></div><div class="bar">${items.map((_,i)=>`<span class="${i<items.length-left?'filled':''}"></span>`).join('')}</div></div>
+  ${items.length?`<div class="dishes">${items.map(i=>dish(o,i)).join('')}</div>`:`<div class="pending">${icon(o.imageUrl?'scan':'upload')}<strong>${label}</strong><small>${o.imageUrl?'เปิดรูปบิลเพื่อตรวจรายการได้':'รอรูปจากพนักงานส่งบิล'}</small></div>`}
+  ${warnings.length?`<div class="allergy">${icon('warn')}<span>ข้อมูลแพ้อาหาร · ${esc(warnings.join('\n'))}</span></div>`:''}
+  <details class="info" ${o.ocrStatus==='error'?'open':''}><summary>${o.ocrStatus==='done'&&(!o.tableNo||!o.billNo)?'⚠ ตรวจโต๊ะ / เลขบิลจากรูป':'หมายเหตุ / ข้อมูลการอ่านบิล'}</summary><p>${esc(notes)}</p>${o.imageUrl&&!o.completed?`<button data-read="${id}" ${locked.has(o.id)||PhotoJobs.isReading(o)||o.ocrStatus==='ai_queued'?'disabled':''}>อ่านรูปใหม่</button>`:''}</details>
+  <div class="actions"><button class="btn" data-image="${id}" ${o.imageUrl?'':'disabled'}>${icon('image')}ดูรูปบิล</button>${o.completed?'<span class="archived">✓ ปิดแล้ว</span>':`<button class="btn primary" data-close="${id}" ${locked.has(o.id)?'disabled':''}>${icon('checkcircle')}ปิดบิล</button>`}</div></article>`;
+ }
+ let filter='all',timer,historyOrders=[],historyMessage='';
+ $('tabs').onclick=async e=>{
+  const button=e.target.closest('[data-filter]');if(!button)return;
+  filter=button.dataset.filter;
+  if(filter!=='closed'){render();return}
+  historyMessage='กำลังโหลดบิลที่ปิดแล้ว…';render();
+  try{
+   const snap=await f.getDocs(f.query(f.collection(db,'orders'),f.orderBy('completedAtMs','desc'),f.limit(100)));
+   historyOrders=snap.docs.map(d=>({...d.data(),id:d.id})).filter(o=>o.completed&&!o.softDeleted);
+   historyMessage='';
+  }catch{historyMessage='โหลดบิลที่ปิดแล้วไม่สำเร็จ แตะปิดแล้วเพื่อลองอีกครั้ง'}
+  render();
+ };
+ function render(){
+  const now=Date.now(),active=orders.filter(o=>!o.completed&&!o.softDeleted).map(displayed);
+  const overdue=active.filter(o=>late(o,now)),waiting=active.filter(o=>!o.items.length||unsafeItems(o));
+  clearTimeout(timer);
+  const next=active.map(o=>start(o)+limitMs+1).filter(t=>t>now);
+  if(next.length)timer=setTimeout(render,Math.min(...next)-now);
+  $('clock').textContent=time(now);$('date').textContent=new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short',year:'numeric'}).format(now);
+  const outstanding=active.reduce((sum,o)=>sum+(unsafeItems(o)?0:o.items.filter(i=>!i.done).length),0);
+  $('metrics').innerHTML=[['receipt','บิลที่เปิดอยู่',active.length,'บิล'],['timer','รอเกิน 30 นาที',overdue.length,'บิล'],['dish','เมนูที่ยังค้าง',outstanding,'เมนู'],['scan','รอรูป / AI',waiting.length,'บิล']].map(([im,label,n,u])=>`<div class="metric"><span class="metric-icon">${icon(im)}</span><div class="data"><small>${label}</small><b>${n}<span>${u}</span></b></div></div>`).join('');
+  $('tabs').innerHTML=[['all','บิลทั้งหมด',active.length],['late','รอนาน',overdue.length],['waiting','รอรูป / AI',waiting.length],['closed','ปิดแล้ว',null]].map(([id,label,n])=>`<button class="tab ${filter===id?'active':''}" aria-pressed="${filter===id}" data-filter="${id}">${label}${n===null?'':` <em>${n}</em>`}</button>`).join('');
+  const pool={all:active,late:overdue,waiting,closed:historyOrders}[filter];
+  const q=$('search').value.trim().toLowerCase();
+  const list=pool.filter(o=>['โต๊ะ '+ReceiptParser.normalizeTable(o.tableNo),o.billNo,...(o.items||[]).map(i=>i.text)].join(' ').toLowerCase().includes(q));
+  if(filter!=='closed')list.sort((a,b)=>start(a)-start(b));
+  document.querySelector('.sort').textContent=filter==='closed'?'ปิดล่าสุด · สูงสุด 100 บิล':'รอนานก่อน';
+  const status=filter==='closed'&&historyMessage;
+  const board=$('board'),opened=new Set([...board.querySelectorAll('details[open]')].map(d=>d.closest('article').querySelector('[data-image]').dataset.image));
+  board.innerHTML=(!status&&list.map(o=>card(o,now)).join(''))||`<div class="empty">${status||'ไม่มีบิลในมุมมองนี้'}</div>`;
+  for(const el of board.querySelectorAll('article'))if(opened.has(el.querySelector('[data-image]').dataset.image))el.querySelector('details').open=true;
+ }
+ render();
  f.onSnapshot(f.query(f.collection(db,'orders'),f.where('completed','==',false)),{includeMetadataChanges:true},snap=>{online=!snap.metadata.fromCache&&navigator.onLine;connectionState(!navigator.onLine?'offline':online?'live':'syncing');$('connection').textContent=online?'เชื่อมต่อแล้ว • ข้อมูลสด':!navigator.onLine?'ออฟไลน์ • รอเชื่อมก่อนบันทึก':'กำลังเชื่อมข้อมูลสด…';const ids=new Set(snap.docs.map(d=>d.id));if(sound&&known&&[...ids].some(id=>!known.has(id)))audio.play().catch(()=>{});known=ids;orders=snap.docs.map(d=>({...d.data(),id:d.id}));render();},e=>{connectionState('offline');$('connection').textContent='โหลดบิลไม่ได้: '+e.message;online=false;});
  $('search').oninput=render;$('closePicture').onclick=()=>$('picture').close();
- $('board').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.order||b.dataset.image||b.dataset.read||b.dataset.close,o=orders.find(o=>o.id===id);if(!o)return;if(b.dataset.image){$('billImage').src=o.imageUrl;$('picture').showModal();return;}if(locked.has(id))return;
+ $('board').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.order||b.dataset.image||b.dataset.read||b.dataset.close,o=orders.find(o=>o.id===id)||(b.dataset.image&&historyOrders.find(o=>o.id===id));if(!o)return;if(b.dataset.image){$('billImage').src=o.imageUrl;$('picture').showModal();return;}if(locked.has(id))return;
  if(b.dataset.item){if(!navigator.onLine){message('ออฟไลน์ กรุณาเชื่อมต่อก่อนเช็กเมนู');return;}const item=displayed(o).items.find(i=>i.id===b.dataset.item);if(!item)return;dishEdits.set(id+'/'+item.id,{order:id,item:item.id,text:item.text,done:!item.done});render();flushDishes();return;}
  if([...dishEdits.values()].some(e=>e.order===id)){message('กำลังบันทึกเมนู กรุณารอสักครู่ก่อนปิดบิลหรืออ่านใหม่');return;}locked.add(id);render();try{if(!online)throw Error('รอเชื่อมข้อมูลสดก่อน');if(b.dataset.read){if(PhotoJobs.isReading(o)||o.ocrStatus==='ai_queued')throw Error('บิลนี้อยู่ในคิว AI แล้ว กรุณารอผล');if(!o.imageUrl)throw Error('บิลนี้ยังไม่มีรูป กรุณาส่งรูปก่อน');const expected=PhotoJobs.fingerprintItems(o.items);if(o.items?.length&&!window.confirm('อ่านรูปใหม่แทนรายการเดิม และเริ่มเช็กเมนูใหม่ทั้งหมด ยืนยันหรือไม่?'))return;await readInto(id,{imageUrl:o.imageUrl},expected);}else {if(b.dataset.close){const remaining=(o.items||[]).filter(i=>!i.done).length;const question=!(o.items||[]).length?'ยังไม่มีเมนูจาก AI ยืนยันว่าตรวจรูปบิลและต้องการปิดบิลนี้?':remaining?`ยังมี ${remaining} รายการไม่ได้เช็ก ยืนยันปิดบิลนี้หรือไม่?`:'ยืนยันปิดบิลนี้?';if(!window.confirm(question))return;}await f.runTransaction(db,async tx=>{const ref=created(id),s=await tx.get(ref);if(!s.exists()||s.data().completed||s.data().softDeleted)throw Error('บิลนี้ปิดแล้ว');const latest=s.data();if(b.dataset.item){const desired=!o.items.find(i=>i.id===b.dataset.item)?.done;const list=latest.items.map(i=>i.id===b.dataset.item?{...i,done:desired}:i);if(!list.some(i=>i.id===b.dataset.item))throw Error('รายการเปลี่ยนแล้ว');tx.update(ref,{items:list,updatedAt:f.serverTimestamp()});}else{if(!PhotoJobs.sameItems(latest.items,o.items))throw Error('รายการเปลี่ยนระหว่างยืนยัน กรุณาตรวจแล้วปิดอีกครั้ง');tx.update(ref,{...PhotoJobs.closePatch(latest),updatedAt:f.serverTimestamp()});}});if(b.dataset.close)message('ปิดบิลแล้ว ✓');}}catch(e){message(e.message);}finally{locked.delete(id);render();}};setInterval(render,30000);
 }

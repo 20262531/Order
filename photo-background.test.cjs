@@ -2,7 +2,7 @@ const vm=require('node:vm'),fs=require('node:fs'),assert=require('node:assert/st
 const P=require('./flow-v2/receipt-parser.js'),J=require('./photo-jobs.js');
 const code=fs.readFileSync(__dirname+'/photo-flow.js','utf8').replace("import(base+'firebase-app.js')","Promise.resolve(mockApp)").replace("import(base+'firebase-firestore.js')","Promise.resolve(mockFire)").replace("import(base+'firebase-storage.js')","Promise.resolve(mockStorage)");
 const outJobs=new Map();let holdUploads=false,uploadResolvers=[],failNext=false;const docs=new Map(),drafts=new Map(),subscribers=[],nodes=new Map(),resolvers=[];let uploads=0,aiCalls=0;
-const el=id=>{if(!nodes.has(id))nodes.set(id,{value:'',hidden:false,disabled:false,textContent:'',files:[],dataset:{},removeAttribute(){}});return nodes.get(id);};
+const el=id=>{if(!nodes.has(id))nodes.set(id,{value:'',hidden:false,disabled:false,textContent:'',files:[],dataset:{},setAttribute(){},classList:{toggle(){}},removeAttribute(){}});return nodes.get(id);};
 const emit=()=>queueMicrotask(()=>{for(const cb of subscribers)cb({metadata:{fromCache:false},docs:[...docs.entries()].filter(([id,o])=>!o.completed).map(([id,o])=>({id,data:()=>structuredClone(o)}))});});
 const idb={transaction(){const tx={objectStore:()=>({put(v,k){drafts.set(k,structuredClone(v));},delete(k){drafts.delete(k);},get(k){const q={};queueMicrotask(()=>{q.result=drafts.get(k);q.onsuccess?.();});return q;}})};setImmediate(()=>tx.oncomplete?.());return tx;}};
 let chain=Promise.resolve();
